@@ -63,6 +63,7 @@ import com.mcnut.banking.helpers.StoreAuthToken
 import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AccountScreen() {
