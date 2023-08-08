@@ -51,7 +51,7 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val context = LocalContext.current
     var items by remember { mutableStateOf(listOf<CategoryItem>()) }
     val coroutineScope = rememberCoroutineScope()
-    items = bankingInfo.categories!!
+    items = bankingInfo.categories
     val showEditDialog = remember { mutableStateOf(false) }
     var currentCategoryItem by remember { mutableStateOf<CategoryItem?>(null) }
     val showDialog = remember { mutableStateOf(false) }

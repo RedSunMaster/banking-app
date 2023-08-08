@@ -109,7 +109,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     text = { Text(text = "DISTRIBUTE BUDGET") },
                     onClick = {
                         if (totalPercentage == 100.0) {
-                            bankingInfo.categories!!.forEach { category ->
+                            bankingInfo.categories.forEach { category ->
                                 if (categoryAmounts[category.category] != 0.0 && categoryAmounts[category.category] != null) {
                                     val inputDate = getDate(System.currentTimeMillis(), "yyyy-MM-dd")
                                     val inputAmount = categoryAmounts[category.category]?: 0.0
@@ -215,7 +215,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             .fillMaxSize(),
                         contentPadding = PaddingValues(bottom = heightInDp * 2)
                     ) {
-                        bankingInfo.categories!!.forEach { category ->
+                        bankingInfo.categories.forEach { category ->
 
                             item {
                                 var percentageString by rememberSaveable { mutableStateOf("") }

@@ -54,7 +54,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val coroutineScope = rememberCoroutineScope()
     val rowPadding = 10.dp
     val context = LocalContext.current
-    val categoryList = bankingInfo.categories!!.map { it.category }
+    val categoryList = bankingInfo.categories.map { it.category }
     val keyboardController = LocalSoftwareKeyboardController.current
     selectedFromItem = try {
         categoryList[0]

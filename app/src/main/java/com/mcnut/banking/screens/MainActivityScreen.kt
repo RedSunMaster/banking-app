@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -54,9 +53,6 @@ import com.mcnut.banking.fragments.getCategories
 import com.mcnut.banking.fragments.getMoneyOwed
 import com.mcnut.banking.fragments.getTransactions
 import com.mcnut.banking.fragments.updateData
-import com.mcnut.banking.helpers.StoreAuthToken
-import com.mcnut.banking.helpers.StoreCheckedCategories
-import com.mcnut.banking.helpers.StoreDarkMode
 import com.mcnut.banking.settings.CategorySettings
 import com.mcnut.banking.settings.ProfileSettings
 import com.mcnut.banking.settings.ThemeSettings
@@ -91,12 +87,6 @@ fun MainActivityScreen(data: Data, authToken: String) {
         Screen.Settings,
     )
 
-    val settingsRoutes = setOf(
-        Screen.ThemeSettings.route,
-        Screen.CategorySettings.route,
-        Screen.ProfileSettings.route
-    )
-
 
 
     val navController = rememberNavController()
@@ -125,10 +115,6 @@ fun MainActivityScreen(data: Data, authToken: String) {
     var loggedInUser by remember { mutableStateOf(listOf<UserItem>())}
 
     val context = LocalContext.current
-    val dataStore = StoreAuthToken(context)
-    val storeDarkMode = StoreDarkMode(context)
-    val storePieChart = StoreCheckedCategories(context)
-
 
 
     var categoriesUpdated by remember { mutableStateOf(false) }
@@ -137,7 +123,6 @@ fun MainActivityScreen(data: Data, authToken: String) {
     var balancesUpdated by remember { mutableStateOf(false) }
     var updateAll by remember { mutableStateOf(false) }
 
-    var openProfileDialog by remember { mutableStateOf(false) }
     val state = DatabaseInformation(
         categoryUpdated = categoriesUpdated,
         owedUpdated = owedUpdated,
@@ -359,15 +344,16 @@ fun MainActivityScreen(data: Data, authToken: String) {
                         navController
                     )
 
-                    composable(Screen.Balances.route) { AccountBalancesScreen(state, bankingInfo!!) }
-                    composable(Screen.MoneyOwed.route) { MoneyOwed(state, bankingInfo!!) }
-                    composable(Screen.Transfer.route) { TransferScreen(state, bankingInfo!!) }
-                    composable(Screen.Transactions.route, arguments = listOf(navArgument("item") { type = NavType.StringType })) { backStackEntry -> AllTransactionsScreen(state, bankingInfo!!, backStackEntry) }
-                    composable(Screen.Budget.route) { IncomeScreen(state, bankingInfo!!) }
-                    composable(Screen.Settings.route) { SettingsScreen(navController, state, bankingInfo!!) }
-                    composable(Screen.ThemeSettings.route) { ThemeSettings(navController) }
-                    composable(Screen.CategorySettings.route) { CategorySettings(state, bankingInfo!!) }
-                    composable(Screen.ProfileSettings.route) { ProfileSettings(state, bankingInfo!!) }
+                    composable(Screen.Balances.route) { AccountBalancesScreen(state, bankingInfo) }
+                    composable(Screen.MoneyOwed.route) { MoneyOwed(state, bankingInfo) }
+                    composable(Screen.Transfer.route) { TransferScreen(state, bankingInfo) }
+                    composable(Screen.Transactions.route, arguments = listOf(navArgument("item") { type = NavType.StringType })) { backStackEntry -> AllTransactionsScreen(state,
+                        bankingInfo, backStackEntry) }
+                    composable(Screen.Budget.route) { IncomeScreen(state, bankingInfo) }
+                    composable(Screen.Settings.route) { SettingsScreen(navController) }
+                    composable(Screen.ThemeSettings.route) { ThemeSettings() }
+                    composable(Screen.CategorySettings.route) { CategorySettings(state, bankingInfo) }
+                    composable(Screen.ProfileSettings.route) { ProfileSettings(bankingInfo) }
 
                     composable(Screen.ServerDown.route) { ServerDownScreen() }
 

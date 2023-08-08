@@ -16,8 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.mcnut.banking.types.BankingInfo
-import com.mcnut.banking.types.DatabaseInformation
 
 val buttons = listOf(
     Screen.ThemeSettings,
@@ -26,7 +24,7 @@ val buttons = listOf(
 )
 
 @Composable
-fun SettingsScreen(navController: NavHostController, state: DatabaseInformation, bankingInfo: BankingInfo) {
+fun SettingsScreen(navController: NavHostController) {
     Column(
         modifier = Modifier.padding(end = 24.dp, start = 16.dp)
     ) {

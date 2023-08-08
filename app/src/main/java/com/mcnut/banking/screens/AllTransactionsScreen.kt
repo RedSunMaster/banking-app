@@ -20,14 +20,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -72,12 +70,12 @@ import kotlinx.coroutines.launch
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, navBackStackEntry: NavBackStackEntry) {
-    val item = navBackStackEntry.arguments?.getString("item") ?: bankingInfo.categories?.get(0)?.category
+    val item = navBackStackEntry.arguments?.getString("item") ?: bankingInfo.categories[0].category
     val dateWeight = .35f
     val amountWeight = .3f
     val descriptionWeight = .4f
 
-    var filterCategory by rememberSaveable { mutableStateOf(item ?: "") }
+    var filterCategory by rememberSaveable { mutableStateOf(item) }
     var filterText by rememberSaveable { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     var openDialog by remember { mutableStateOf(false) }
@@ -94,7 +92,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
     LaunchedEffect(filterText, filterCategory, bankingInfo.transactions, openDialog) {
         Log.d("TEST", "UPDATED")
         val allItems = bankingInfo.transactions
-        val filteredListCategory = allItems!!.filter { it.Category.lowercase() == filterCategory.lowercase() }
+        val filteredListCategory = allItems.filter { it.Category.lowercase() == filterCategory.lowercase() }
         val filteredListBoth = allItems.filter { it.Category.lowercase() == filterCategory.lowercase(
         ) && it.Description.lowercase().contains(filterText.lowercase()) }
         displayedItems = if (filterText == "") {
@@ -117,49 +115,47 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                 }
             )
             if (showDialog.value) {
-                bankingInfo.categories?.let {
-                    AddTransactionDialog(
-                        openDialog = showDialog.value,
-                        categories = it,
-                        onSubmit = { category, date, description, amount, transaction ->
-                            coroutineScope.launch {
-                                val result = postRequest(
-                                    bankingInfo.client,
-                                    "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken, listOf(
-                                        Pair("category", category),
-                                        Pair("date", date),
-                                        Pair("description", description),
-                                        Pair("amount", amount),
-                                        Pair("trans_type", transaction)
-                                    )
+                AddTransactionDialog(
+                    openDialog = showDialog.value,
+                    categories = bankingInfo.categories,
+                    onSubmit = { category, date, description, amount, transaction ->
+                        coroutineScope.launch {
+                            val result = postRequest(
+                                bankingInfo.client,
+                                "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken, listOf(
+                                    Pair("category", category),
+                                    Pair("date", date),
+                                    Pair("description", description),
+                                    Pair("amount", amount),
+                                    Pair("trans_type", transaction)
                                 )
-                                when {
-                                    result.first -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Successfully Added",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        state.onBalancesUpdatedChange(true)
-                                        state.onTransactionUpdatedChange(true)
-                                    }
-
-                                    else -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Addition Failed! ${result.second}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                            )
+                            when {
+                                result.first -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Successfully Added",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    state.onBalancesUpdatedChange(true)
+                                    state.onTransactionUpdatedChange(true)
                                 }
 
-                                showDialog.value = false
+                                else -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Addition Failed! ${result.second}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
-                        },
-                        onDismiss = { showDialog.value = false },
-                        selectedCategory = filterCategory
-                    )
-                }
+
+                            showDialog.value = false
+                        }
+                    },
+                    onDismiss = { showDialog.value = false },
+                    selectedCategory = filterCategory
+                )
             }
         },
         floatingActionButtonPosition = FabPosition.End,
@@ -199,7 +195,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                         Log.d("MyComposable", "filterCategory changed: $newItem")
                         filterCategory = newItem
                     },
-                    categories = bankingInfo.categories!!,
+                    categories = bankingInfo.categories,
                 )
             }
             item {
@@ -249,62 +245,24 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
             }
         }
         if (openDialog) {
-            bankingInfo.categories.let {
-                EditTransactionDialogPopup(
-                    openDialog = true,
-                    transaction = currentTransactionItem!!,
-                    onDismiss = { openDialog = false },
-                    onDelete = { id ->
+            EditTransactionDialogPopup(
+                openDialog = true,
+                transaction = currentTransactionItem!!,
+                onDismiss = { openDialog = false },
+                onDelete = { id ->
+                    coroutineScope.launch {
                         coroutineScope.launch {
-                            coroutineScope.launch {
-                                val result = deleteRequest(
-                                    bankingInfo.client,
-                                    "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken, listOf(
-                                        Pair("transactionId", id),
-                                    )
-                                )
-                                when {
-                                    result.first -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Successfully Deleted",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        state.onBalancesUpdatedChange(true)
-                                        state.onTransactionUpdatedChange(true)
-                                    }
-
-                                    else -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Update Failed! ${result.second}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                                openDialog = false
-                            }
-                        }
-                    },
-                    categories = it,
-                    onSubmit = { newCategory, newDescription, newAmount, newTrans, newDate, trans_id ->
-                        coroutineScope.launch {
-                            val result = patchRequest(
+                            val result = deleteRequest(
                                 bankingInfo.client,
                                 "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken, listOf(
-                                    Pair("transactionId", trans_id),
-                                    Pair("category", newCategory),
-                                    Pair("date", newDate),
-                                    Pair("description", newDescription),
-                                    Pair("amount", newAmount),
-                                    Pair("trans_type", newTrans)
+                                    Pair("transactionId", id),
                                 )
                             )
                             when {
                                 result.first -> {
                                     Toast.makeText(
                                         context,
-                                        "Successfully Updated",
+                                        "Successfully Deleted",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     state.onBalancesUpdatedChange(true)
@@ -319,11 +277,47 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                                     ).show()
                                 }
                             }
+                            openDialog = false
                         }
-                        openDialog = false
                     }
-                )
-            }
+                },
+                categories = bankingInfo.categories,
+                onSubmit = { newCategory, newDescription, newAmount, newTrans, newDate, trans_id ->
+                    coroutineScope.launch {
+                        val result = patchRequest(
+                            bankingInfo.client,
+                            "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken, listOf(
+                                Pair("transactionId", trans_id),
+                                Pair("category", newCategory),
+                                Pair("date", newDate),
+                                Pair("description", newDescription),
+                                Pair("amount", newAmount),
+                                Pair("trans_type", newTrans)
+                            )
+                        )
+                        when {
+                            result.first -> {
+                                Toast.makeText(
+                                    context,
+                                    "Successfully Updated",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                state.onBalancesUpdatedChange(true)
+                                state.onTransactionUpdatedChange(true)
+                            }
+
+                            else -> {
+                                Toast.makeText(
+                                    context,
+                                    "Update Failed! ${result.second}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                    openDialog = false
+                }
+            )
         }
     }
 }

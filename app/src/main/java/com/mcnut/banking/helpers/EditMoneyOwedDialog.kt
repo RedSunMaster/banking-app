@@ -38,28 +38,29 @@ import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.OwedItem
 import java.text.DateFormat
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun EditMoneyOwedDialog(openDialog: Boolean, owed_item: OwedItem, categories: List<CategoryItem>, onDismiss: () -> Unit,
+fun EditMoneyOwedDialog(openDialog: Boolean, owedItem: OwedItem, categories: List<CategoryItem>, onDismiss: () -> Unit,
                         onSubmit: (amount: String, chosenDate: String, descriptionText: String, personText: String, selectedItem: String, itemID: Int) -> Unit) {
     var amount by remember { mutableStateOf("") }
     val showDialog = remember { mutableStateOf(false) }
     val chosenDate = remember { mutableStateOf("") }
     var descriptionText by remember { mutableStateOf("") }
-    val itemID by remember { mutableIntStateOf(owed_item.ID) }
+    val itemID by remember { mutableIntStateOf(owedItem.ID) }
     var personText by remember { mutableStateOf("") }
     var selectedItem by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val rowPadding = 10.dp
     val keyboardController = LocalSoftwareKeyboardController.current
-    selectedItem = owed_item.Category
-    val date = DateFormat.getDateInstance().parse(owed_item.Date)
+    selectedItem = owedItem.Category
+    val date = DateFormat.getDateInstance().parse(owedItem.Date)
     val outputString = date?.let { DateFormat.getDateInstance(DateFormat.SHORT).format(it) }
     if (outputString != null) {
         chosenDate.value = outputString
     }
-    descriptionText = owed_item.Description
-    amount = owed_item.Amount.toString()
-    personText = owed_item.Person
+    descriptionText = owedItem.Description
+    amount = owedItem.Amount.toString()
+    personText = owedItem.Person
 
     if (openDialog) {
         AlertDialog(

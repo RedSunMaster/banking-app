@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,11 +23,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.R
 import com.mcnut.banking.types.BankingInfo
-import com.mcnut.banking.types.DatabaseInformation
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
+fun ProfileSettings(bankingInfo: BankingInfo) {
     val firstName by remember { mutableStateOf(bankingInfo.user[0].firstName) }
     val lastName by remember { mutableStateOf(bankingInfo.user[0].lastName) }
     val email by remember { mutableStateOf(bankingInfo.user[0].email) }

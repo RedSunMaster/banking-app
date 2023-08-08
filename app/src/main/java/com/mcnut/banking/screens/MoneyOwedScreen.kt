@@ -99,49 +99,47 @@ fun MoneyOwed(state: DatabaseInformation, bankingInfo: BankingInfo) {
                 }
             )
             if (openDialog) {
-                bankingInfo.categories.let {
-                    AddMoneyOwedDialog(
-                        openDialog = true,
-                        onDismiss = { openDialog = false },
-                        categories = it,
-                        onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem ->
-                            openDialog = false
-                            coroutineScope.launch {
-                                val result = postRequest(
-                                    bankingInfo.client,
-                                    "http://mcgarage.hopto.org:8085/api/moneyOwed",
-                                    bankingInfo.authToken,
-                                    listOf(
-                                        Pair("person", personText),
-                                        Pair("category", selectedItem),
-                                        Pair("description", descriptionText),
-                                        Pair("date", chosenDate),
-                                        Pair("amount", if (amount.isEmpty()) 0.0 else amount.toDouble())
-                                    )
+                AddMoneyOwedDialog(
+                    openDialog = true,
+                    onDismiss = { openDialog = false },
+                    categories = bankingInfo.categories,
+                    onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem ->
+                        openDialog = false
+                        coroutineScope.launch {
+                            val result = postRequest(
+                                bankingInfo.client,
+                                "http://mcgarage.hopto.org:8085/api/moneyOwed",
+                                bankingInfo.authToken,
+                                listOf(
+                                    Pair("person", personText),
+                                    Pair("category", selectedItem),
+                                    Pair("description", descriptionText),
+                                    Pair("date", chosenDate),
+                                    Pair("amount", if (amount.isEmpty()) 0.0 else amount.toDouble())
                                 )
-                                when {
-                                    result.first -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Successfully Updated",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        state.onBalancesUpdatedChange(true)
-                                        state.onOwedUpdatedChange(true)
-                                    }
+                            )
+                            when {
+                                result.first -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Successfully Updated",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    state.onBalancesUpdatedChange(true)
+                                    state.onOwedUpdatedChange(true)
+                                }
 
-                                    else -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Update Failed! ${result.second}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                                else -> {
+                                    Toast.makeText(
+                                        context,
+                                        "Update Failed! ${result.second}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
                         }
-                    )
-                }
+                    }
+                )
 
             }
         },
@@ -187,14 +185,7 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
     val coroutineScope = rememberCoroutineScope()
     var canSend by remember { mutableStateOf(false) }
 
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            //DO NOTHING
-        } else {// DO NOTHING
-        }
-    }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
     LaunchedEffect(canSend) {
         canSend = if (data.user[0].smsTimestamp == "null") {
@@ -252,7 +243,6 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
                     }
                 } else {
                     launcher.launch(Manifest.permission.SEND_SMS)
-                    launcher.launch(Manifest.permission.READ_CONTACTS)
                 }
             }) {
                 Icon(
@@ -475,49 +465,47 @@ fun DisplayItemsList(items: List<OwedItem>, showItems: Boolean, bankingInfo: Ban
         }
     }
     if (openDialog) {
-        bankingInfo.categories.let {
-            EditMoneyOwedDialog(
-                openDialog = true,
-                owed_item = currentOwedItem!!,
-                onDismiss = { openDialog = false },
-                categories = it,
-                onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem, itemId ->
-                    openDialog = false
-                    coroutineScope.launch {
-                        val result = patchRequest(bankingInfo.client,"http://mcgarage.hopto.org:8085/api/editOwedItem",
-                            bankingInfo.authToken,listOf(
-                                Pair("owed_id", itemId),
-                                Pair("person", personText),
-                                Pair("category", selectedItem),
-                                Pair("description", descriptionText),
-                                Pair("date", chosenDate),
-                                Pair("amount", amount.toDouble())
-                            ))
-                        when {
-                            result.first -> {
-                                Toast.makeText(
-                                    context,
-                                    "Successfully Updated",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                state.onBalancesUpdatedChange(true)
-                                state.onOwedUpdatedChange(true)
-                            }
-
-                            else -> {
-                                Toast.makeText(
-                                    context,
-                                    "Update Failed! ${result.second}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+        EditMoneyOwedDialog(
+            openDialog = true,
+            owedItem = currentOwedItem!!,
+            onDismiss = { openDialog = false },
+            categories = bankingInfo.categories,
+            onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem, itemId ->
+                openDialog = false
+                coroutineScope.launch {
+                    val result = patchRequest(bankingInfo.client,"http://mcgarage.hopto.org:8085/api/editOwedItem",
+                        bankingInfo.authToken,listOf(
+                            Pair("owed_id", itemId),
+                            Pair("person", personText),
+                            Pair("category", selectedItem),
+                            Pair("description", descriptionText),
+                            Pair("date", chosenDate),
+                            Pair("amount", amount.toDouble())
+                        ))
+                    when {
+                        result.first -> {
+                            Toast.makeText(
+                                context,
+                                "Successfully Updated",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            state.onBalancesUpdatedChange(true)
+                            state.onOwedUpdatedChange(true)
                         }
 
-                        openDialog = false
+                        else -> {
+                            Toast.makeText(
+                                context,
+                                "Update Failed! ${result.second}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
+
+                    openDialog = false
                 }
-            )
-        }
+            }
+        )
     }
 }
 

@@ -67,8 +67,8 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
     val context = LocalContext.current
     var fabHeight by remember { mutableIntStateOf(0) }
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
-    items = bankingInfo.accountBalances!!
-    val categoryList = bankingInfo.categories!!
+    items = bankingInfo.accountBalances
+    val categoryList = bankingInfo.categories
     val storeCheckedCategories = StoreCheckedCategories(context)
     val savedCheckedCategories by storeCheckedCategories.getCheckedCategories.collectAsState(initial = setOf())
     checkedCategories = savedCheckedCategories.associateWith { true }

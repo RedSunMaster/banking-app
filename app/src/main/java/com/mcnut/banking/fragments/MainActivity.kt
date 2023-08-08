@@ -1,6 +1,6 @@
 package com.mcnut.banking.fragments
 
-import SplashScreen
+import com.mcnut.banking.screens.SplashScreen
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
