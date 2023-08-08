@@ -2,21 +2,19 @@ package com.mcnut.banking.fragments
 
 import SplashScreen
 import android.os.Bundle
-import android.util.Log
-import android.util.SparseLongArray
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.layout.Box
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import co.yml.charts.common.extensions.isNotNull
 import com.mcnut.banking.helpers.StoreAuthToken
-import com.mcnut.banking.helpers.StoreCheckedCategories
 import com.mcnut.banking.helpers.StoreDarkMode
 import com.mcnut.banking.helpers.getRequest
 import com.mcnut.banking.screens.AccountScreen
@@ -29,9 +27,7 @@ import com.mcnut.banking.types.Transaction
 import com.mcnut.banking.types.UserItem
 import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -69,12 +65,7 @@ class MainActivity : AppCompatActivity() {
                         )
                     }
                     val success = result.first
-                    if (success) {
-                        canLogin.value = true
-                    } else {
-                        dataStore.saveAuthToken("")
-                        canLogin.value = false
-                    }
+                    canLogin.value = success
                 }
             }
             LaunchedEffect (darkModeFlow) {
