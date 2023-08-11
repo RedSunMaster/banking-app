@@ -62,7 +62,10 @@ import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.Data
 import com.mcnut.banking.types.DatabaseInformation
 import com.mcnut.banking.types.OwedItem
+import com.mcnut.banking.types.StatsInfo
 import com.mcnut.banking.types.Transaction
+import com.mcnut.banking.types.TransactionSummary
+import com.mcnut.banking.types.TrendSummary
 import com.mcnut.banking.types.UserItem
 import kotlinx.coroutines.launch
 import okhttp3.Cache
@@ -110,6 +113,8 @@ fun MainActivityScreen(data: Data, authToken: String) {
 
     var categories by remember { mutableStateOf(listOf<CategoryItem>()) }
     var transactions by remember { mutableStateOf(listOf<Transaction>()) }
+    var monthlyTrends by remember { mutableStateOf(listOf<TrendSummary>()) }
+    var alikeTransactions by remember { mutableStateOf(listOf<TransactionSummary>()) }
     var balanceItems by remember { mutableStateOf(listOf<BalanceItem>()) }
     var owedItems by remember { mutableStateOf(listOf<OwedItem>()) }
     var loggedInUser by remember { mutableStateOf(listOf<UserItem>())}
@@ -155,6 +160,8 @@ fun MainActivityScreen(data: Data, authToken: String) {
         owedItems = data.owedItems
         loggedInUser = data.loggedInUser
         transactions = data.transactions
+        monthlyTrends = data.monthlyTrends
+        alikeTransactions = data.alikeTransactions
     }
 
     LaunchedEffect(updateAll) {
@@ -165,6 +172,8 @@ fun MainActivityScreen(data: Data, authToken: String) {
             owedItems = newData.owedItems
             loggedInUser = newData.loggedInUser
             transactions = newData.transactions
+            monthlyTrends = data.monthlyTrends
+            alikeTransactions = data.alikeTransactions
             updateAll = false
         }
     }
@@ -189,7 +198,9 @@ fun MainActivityScreen(data: Data, authToken: String) {
     }
     LaunchedEffect(transactionsUpdated) {
         if (transactionsUpdated) {
-            transactions = getTransactions(client, authToken)
+            val result = getTransactions(client, authToken)
+            transactions = result.first
+            monthlyTrends = result.second
             transactionsUpdated = false
         }
     }
@@ -343,18 +354,20 @@ fun MainActivityScreen(data: Data, authToken: String) {
                         client,
                         navController
                     )
+                    val stats = StatsInfo(
+                        monthlyTrends,
+                        alikeTransactions
+                    )
 
                     composable(Screen.Balances.route) { AccountBalancesScreen(state, bankingInfo) }
                     composable(Screen.MoneyOwed.route) { MoneyOwed(state, bankingInfo) }
                     composable(Screen.Transfer.route) { TransferScreen(state, bankingInfo) }
-                    composable(Screen.Transactions.route, arguments = listOf(navArgument("item") { type = NavType.StringType })) { backStackEntry -> AllTransactionsScreen(state,
-                        bankingInfo, backStackEntry) }
+                    composable(Screen.Transactions.route, arguments = listOf(navArgument("item") { type = NavType.StringType })) { backStackEntry -> AllTransactionsScreen(state, bankingInfo, backStackEntry, stats) }
                     composable(Screen.Budget.route) { IncomeScreen(state, bankingInfo) }
                     composable(Screen.Settings.route) { SettingsScreen(navController) }
                     composable(Screen.ThemeSettings.route) { ThemeSettings() }
                     composable(Screen.CategorySettings.route) { CategorySettings(state, bankingInfo) }
                     composable(Screen.ProfileSettings.route) { ProfileSettings(bankingInfo) }
-
                     composable(Screen.ServerDown.route) { ServerDownScreen() }
 
 

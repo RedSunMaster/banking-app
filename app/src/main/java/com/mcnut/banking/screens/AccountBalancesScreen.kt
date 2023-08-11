@@ -151,7 +151,7 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                             )
                         },
                         colors = ListItemDefaults.colors(
-                            containerColor = item.colour.copy(alpha = 0.2f)
+                            containerColor = item.colour.copy(alpha = 0.3f)
                         )
                     )
                     Spacer(Modifier.height(8.dp))

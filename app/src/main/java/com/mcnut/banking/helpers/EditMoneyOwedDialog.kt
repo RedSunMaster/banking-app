@@ -38,7 +38,7 @@ import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.OwedItem
 import java.text.DateFormat
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun EditMoneyOwedDialog(openDialog: Boolean, owedItem: OwedItem, categories: List<CategoryItem>, onDismiss: () -> Unit,
                         onSubmit: (amount: String, chosenDate: String, descriptionText: String, personText: String, selectedItem: String, itemID: Int) -> Unit) {
@@ -52,12 +52,8 @@ fun EditMoneyOwedDialog(openDialog: Boolean, owedItem: OwedItem, categories: Lis
     val focusManager = LocalFocusManager.current
     val rowPadding = 10.dp
     val keyboardController = LocalSoftwareKeyboardController.current
+    chosenDate.value = owedItem.Date
     selectedItem = owedItem.Category
-    val date = DateFormat.getDateInstance().parse(owedItem.Date)
-    val outputString = date?.let { DateFormat.getDateInstance(DateFormat.SHORT).format(it) }
-    if (outputString != null) {
-        chosenDate.value = outputString
-    }
     descriptionText = owedItem.Description
     amount = owedItem.Amount.toString()
     personText = owedItem.Person

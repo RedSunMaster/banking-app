@@ -2,6 +2,7 @@ package com.mcnut.banking.fragments
 
 import com.mcnut.banking.screens.SplashScreen
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -24,6 +25,8 @@ import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.Data
 import com.mcnut.banking.types.OwedItem
 import com.mcnut.banking.types.Transaction
+import com.mcnut.banking.types.TransactionSummary
+import com.mcnut.banking.types.TrendSummary
 import com.mcnut.banking.types.UserItem
 import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +35,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.json.JSONArray
+import java.lang.Math.abs
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -91,6 +96,8 @@ class MainActivity : AppCompatActivity() {
 
                     var categories by remember { mutableStateOf(listOf<CategoryItem>()) }
                     var transactions by remember { mutableStateOf(listOf<Transaction>()) }
+                    var monthlyTrends by remember { mutableStateOf(listOf<TrendSummary>()) }
+                    var alikeTransactions by remember { mutableStateOf(listOf<TransactionSummary>()) }
                     var balanceItems by remember { mutableStateOf(listOf<BalanceItem>()) }
                     var owedItems by remember { mutableStateOf(listOf<OwedItem>()) }
                     var loggedInUser by remember { mutableStateOf(listOf<UserItem>()) }
@@ -103,6 +110,8 @@ class MainActivity : AppCompatActivity() {
                             owedItems = data.value.owedItems
                             loggedInUser = data.value.loggedInUser
                             transactions = data.value.transactions
+                            monthlyTrends = data.value.monthlyTrends
+                            alikeTransactions = data.value.alikeTransactions
 
                             valuesGotten.value = true
                             showSplash.value = false
@@ -186,11 +195,14 @@ suspend fun getMoneyOwed(client: OkHttpClient, authToken: String): List<OwedItem
             val category = jsonObject.getString("Category")
             val description = jsonObject.getString("Description")
             val date = jsonObject.getString("Date")
-            val offsetDateTime = OffsetDateTime.parse(date)
+            val offsetDateTime =
+                OffsetDateTime.parse(date)
             val zonedDateTime =
                 offsetDateTime.atZoneSameInstant(ZoneId.systemDefault())
-            val formatter = DateTimeFormatter.ofPattern("d/M/yy")
-            val formattedDate = formatter.format(zonedDateTime)
+            val formatter =
+                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val formattedDate =
+                formatter.format(zonedDateTime)
             val daysElapsed = jsonObject.getInt("Days Elapsed")
             val payed = jsonObject.getInt("Payed")
             OwedItem(
@@ -226,11 +238,11 @@ suspend fun getUser(client: OkHttpClient, authToken: String): List<UserItem> {
     return emptyList()
 }
 
-suspend fun getTransactions(client: OkHttpClient, authToken: String): List<Transaction> {
+suspend fun getTransactions(client: OkHttpClient, authToken: String): Triple<List<Transaction>, List<TrendSummary>, List<TransactionSummary>> {
     val transactionsResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/transactions", authToken, listOf())
     if (transactionsResult.first) {
         val jsonArray = JSONArray(transactionsResult.second.toString())
-        return List(jsonArray.length()) { index ->
+        val transactionList = List(jsonArray.length()) { index ->
             val jsonObject = jsonArray.getJSONObject(index)
             val id = jsonObject.getInt("transactionID")
             val date = jsonObject.getString("Date")
@@ -248,8 +260,49 @@ suspend fun getTransactions(client: OkHttpClient, authToken: String): List<Trans
                 formatter.format(zonedDateTime)
             Transaction(id, formattedDate, amount, description, category, transType)
         }
+        val trendSummary = getTrendSummary(transactionList)
+        val transactionSummary = getTransactionSummary(transactionList)
+        Log.d("TESTING", transactionSummary.toString())
+        return Triple(transactionList, trendSummary, transactionSummary)
     }
-    return emptyList()
+    return Triple(emptyList(), emptyList(), emptyList())
+}
+
+
+
+fun getTrendSummary(transactionList: List<Transaction>): List<TrendSummary> {
+    return transactionList
+        .filter { it.TransType == "Withdraw" }
+        .groupBy { Triple(LocalDate.parse(it.Date).year, LocalDate.parse(it.Date).month, it.Category) }
+        .map { (yearMonthCategory, transactions) ->
+            val year = yearMonthCategory.first
+            val month = yearMonthCategory.second
+            val category = yearMonthCategory.third
+            val totalCost = transactions.sumOf { kotlin.math.abs(it.Amount) }
+            TrendSummary(year, month.toString(), category, totalCost)
+        }
+}
+
+
+fun getTransactionSummary(transactionList: List<Transaction>): List<TransactionSummary> {
+    val cte = transactionList
+        .filter { it.TransType == "Withdraw" && !it.Description.contains("Balancing") && !it.Description.contains("Trans") }
+        .groupBy { Triple(LocalDate.parse(it.Date).year, it.Description, it.Category) }
+        .map { (yearItemCategory, transactions) ->
+            val year = yearItemCategory.first
+            val item = yearItemCategory.second
+            val category = yearItemCategory.third
+            val amount = transactions.size
+            val cost = transactions.sumOf { kotlin.math.abs(it.Amount) }
+            val avgCost = cost / amount
+            TransactionSummary(year, item, amount, cost, avgCost, category, 0.0)
+        }
+
+    return cte.map { transactionSummary ->
+        val previousYearCost = cte.filter { it.Item == transactionSummary.Item && it.Category == transactionSummary.Category && it.Year < transactionSummary.Year }.maxByOrNull { it.Year }?.Cost ?: 0.0
+        val percentageDifference = if (previousYearCost == 0.0) 0.0 else (transactionSummary.Cost - previousYearCost) / previousYearCost * 100
+        transactionSummary.copy(PercentageDifference = percentageDifference)
+    }.sortedWith(compareBy({ it.Year }, { it.Category }, { -it.Amount }, { -it.Cost }))
 }
 
 suspend fun updateData(client: OkHttpClient, authToken: String): Data {
@@ -258,5 +311,5 @@ suspend fun updateData(client: OkHttpClient, authToken: String): Data {
     val owedItems = getMoneyOwed(client, authToken)
     val loggedInUser = getUser(client, authToken)
     val transactions = getTransactions(client, authToken)
-    return Data(categories, balanceItems, owedItems, loggedInUser, transactions)
+    return Data(categories, balanceItems, owedItems, loggedInUser, transactions.first, transactions.second, transactions.third)
 }
