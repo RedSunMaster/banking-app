@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,7 +51,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -63,6 +61,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import com.mcnut.banking.R
 import com.mcnut.banking.helpers.AddTransactionDialog
@@ -75,6 +74,7 @@ import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
 import com.mcnut.banking.types.StatsInfo
 import com.mcnut.banking.types.Transaction
+import com.mcnut.banking.types.TransactionSummary
 import com.patrykandpatrick.vico.compose.axis.horizontal.bottomAxis
 import com.patrykandpatrick.vico.compose.axis.vertical.startAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
@@ -82,17 +82,14 @@ import com.patrykandpatrick.vico.compose.chart.line.lineChart
 import com.patrykandpatrick.vico.compose.chart.line.lineSpec
 import com.patrykandpatrick.vico.core.axis.AxisPosition
 import com.patrykandpatrick.vico.core.axis.formatter.AxisValueFormatter
-import com.patrykandpatrick.vico.core.chart.line.LineChart
-import com.patrykandpatrick.vico.core.entry.ChartEntry
 import com.patrykandpatrick.vico.core.entry.ChartEntryModel
 import com.patrykandpatrick.vico.core.entry.composed.plus
 import com.patrykandpatrick.vico.core.entry.entryModelOf
 import com.patrykandpatrick.vico.core.entry.entryOf
-import com.patrykandpatrick.vico.core.legend.Legend
-import com.patrykandpatrick.vico.core.legend.LegendItem
 import kotlinx.coroutines.launch
 import java.lang.Float.min
 import java.time.Month
+import java.time.Year
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -114,16 +111,20 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
     val showDialog = remember { mutableStateOf(false) }
     var fabHeight by remember { mutableIntStateOf(0) }
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
-    var expanded by remember { mutableStateOf(false) }
+    var expandedTransactions by remember { mutableStateOf(false) }
+    var expandedStats by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     var displayedItems by remember { mutableStateOf(listOf<Transaction>()) }
+    var displayedAlikeItems by remember { mutableStateOf(listOf<TransactionSummary>()) }
 
     LaunchedEffect(filterText, filterCategory, bankingInfo.transactions, openDialog) {
         Log.d("TEST", "UPDATED")
         val allItems = bankingInfo.transactions
+        val alikeTransactions = stats.alikeTransactions
         val filteredListCategory = allItems.filter { it.Category.lowercase() == filterCategory.lowercase() }
+        val filteredAlikeCategory = alikeTransactions.filter { it.Category.lowercase() == filterCategory.lowercase() && it.Year == Year.now().value && it.PercentageDifference != 0.0}
         val filteredListBoth = allItems.filter { it.Category.lowercase() == filterCategory.lowercase(
         ) && it.Description.lowercase().contains(filterText.lowercase()) }
         displayedItems = if (filterText == "") {
@@ -131,6 +132,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
         } else {
             filteredListBoth
         }
+        displayedAlikeItems = filteredAlikeCategory
     }
 
     Scaffold(
@@ -208,11 +210,10 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
             item {
                 val filteredData = stats.monthlyTrends.filter { it.category == filterCategory}
 
-// Create a dataset for the chart
-// Group the filtered data by year
+
                 val groupedData = filteredData.groupBy { it.year }
 
-// Create a dataset for the chart for each year
+
                 val allChartEntryModels = mutableListOf<ChartEntryModel>()
 
                 for (group in groupedData.toSortedMap()) {
@@ -246,6 +247,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
 
 
                 Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                    Text(text = "Monthly Spending Trends", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Row (modifier = Modifier.align(Alignment.CenterHorizontally)){
                         for (group in groupedData.toSortedMap()) {
                             val year = group.key.toString()
@@ -260,7 +262,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                                     .align(Alignment.CenterVertically)
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text(text = year, textAlign = TextAlign.Center)
+                            Text(text = year, textAlign = TextAlign.Center, fontSize = 12.sp)
                             Spacer(Modifier.width(16.dp))
                         }
                     }
@@ -284,8 +286,8 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                     )
                     Spacer(Modifier.weight(1f))
-                    IconButton(onClick = { expanded = !expanded }) {
-                        if (expanded) {
+                    IconButton(onClick = { expandedTransactions = !expandedTransactions }) {
+                        if (expandedTransactions) {
                             Icon(
                                 painterResource(id = R.drawable.ic_dropless),
                                 contentDescription = "Dropup"
@@ -300,7 +302,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                 }
             }
             item {
-                AnimatedVisibility(visible = expanded) {
+                AnimatedVisibility(visible = expandedTransactions) {
                     Text(
                         text = "Filter",
                         style = MaterialTheme.typography.labelLarge,
@@ -309,7 +311,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                 }
             }
             item {
-                AnimatedVisibility(visible = expanded) {
+                AnimatedVisibility(visible = expandedTransactions) {
                     OutlinedTextField(
                         value = filterText,
                         onValueChange = { filterText = it },
@@ -330,7 +332,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
             }
 
             item {
-                AnimatedVisibility(visible = expanded) {
+                AnimatedVisibility(visible = expandedTransactions) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -354,7 +356,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                 }
             }
             item {
-                AnimatedVisibility(visible = expanded) {
+                AnimatedVisibility(visible = expandedTransactions) {
                     Box(Modifier.height(300.dp)) {
                         LazyColumn {
                             items(displayedItems) { transactionItem ->
@@ -395,7 +397,101 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                     }
                 }
             }
+            item {
+                Row (verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Show Alike Transactions",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = { expandedStats = !expandedStats }) {
+                        if (expandedStats) {
+                            Icon(
+                                painterResource(id = R.drawable.ic_dropless),
+                                contentDescription = "Dropup"
+                            )
+                        } else {
+                            Icon(
+                                painterResource(id = R.drawable.ic_dropdown),
+                                contentDescription = "Dropdown"
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                AnimatedVisibility(visible = expandedStats) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        TableCell(
+                            text = "Item",
+                            weight = 0.4f,
+                            alignment = TextAlign.Left,
+                            title = true
+                        )
+                        TableCell(text = "#", weight = 0.2f, title = true)
+                        TableCell(text = "Cost", weight = 0.4f, title = true)
+                        TableCell(text = "% Change", weight = descriptionWeight, title = true)
+                    }
+                    Divider(
+                        color = Color.LightGray,
+                        modifier = Modifier
+                            .height(1.dp)
+                            .fillMaxHeight()
+                            .fillMaxWidth()
+                    )
+                }
+            }
+            item {
+                AnimatedVisibility(visible = expandedStats) {
+                    Box(Modifier.height(300.dp)) {
+                        LazyColumn {
+                            items(displayedAlikeItems) { transactionItem ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    TableCell(
+                                        text = transactionItem.Item,
+                                        weight = 0.5f,
+                                        alignment = TextAlign.Left,
+                                    )
+                                    TableCell(
+                                        text = transactionItem.Amount.toString(),
+                                        weight = 0.2f
+                                    )
+                                    TableCell(
+                                        text = "$" + String.format(
+                                            "%.2f",
+                                            transactionItem.Cost
+                                        ), weight = 0.4f
+                                    )
+                                    val color = if (transactionItem.PercentageDifference < 0) Color.Green else Color.Red
 
+                                    TableCell(
+                                        text = String.format("%.2f", transactionItem.PercentageDifference) + "%",
+                                        weight = descriptionWeight,
+                                        color = color,
+                                        title = true
+                                    )
+
+                                }
+                                Divider(
+                                    color = Color.LightGray,
+                                    modifier = Modifier
+                                        .height(1.dp)
+                                        .fillMaxHeight()
+                                        .fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
         if (openDialog) {
             EditTransactionDialogPopup(
@@ -480,7 +576,8 @@ fun RowScope.TableCell(
     text: String,
     weight: Float,
     alignment: TextAlign = TextAlign.Center,
-    title: Boolean = false
+    title: Boolean = false,
+    color: Color = Color.White
 ) {
     Text(
         text = text,
@@ -489,5 +586,6 @@ fun RowScope.TableCell(
             .padding(10.dp),
         fontWeight = if (title) FontWeight.Bold else FontWeight.Normal,
         textAlign = alignment,
+        color = color
     )
 }
