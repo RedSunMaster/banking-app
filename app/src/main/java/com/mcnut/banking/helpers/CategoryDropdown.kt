@@ -48,7 +48,7 @@ fun CategoryDropdown(
             onExpandedChange = {
                 expanded = !expanded
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(horizontal = dropdownPadding)
 
         ) {
             // text field

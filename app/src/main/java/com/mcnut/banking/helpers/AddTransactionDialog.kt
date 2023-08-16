@@ -199,7 +199,9 @@ fun AddTransactionDialog(openDialog: Boolean, categories: List<CategoryItem>, se
                         }
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
-                            onClick = { onSubmit(selectedItem, chosenDate.value, descriptionText, if(transactionText == "Withdraw") { amount.toDouble()*-1} else {amount.toDouble() }, transactionText) }
+                            onClick = { onSubmit(selectedItem, chosenDate.value, descriptionText, if(transactionText == "Withdraw") {
+                                amount.toDoubleOrNull() ?: (0.0 * -1)
+                            } else {amount.toDoubleOrNull() ?: 0.0 }, transactionText) }
                         ) {
                             Text("Submit")
                         }

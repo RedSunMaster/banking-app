@@ -13,5 +13,7 @@ data class DatabaseInformation(
     val onTransactionUpdatedChange: (Boolean) -> Unit,
     val onBalancesUpdatedChange: (Boolean) -> Unit,
     val onUpdateAllChange: (Boolean) -> Unit,
-    val navController: NavHostController
+    val navController: NavHostController,
+    val darkModeToggle: Boolean,
+    val onDarkModeUpdate: (Boolean) -> Unit,
 )

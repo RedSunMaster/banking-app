@@ -69,6 +69,7 @@ import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
 import com.mcnut.banking.types.OwedItem
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,89 +89,94 @@ fun MoneyOwed(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
     var openDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { openDialog = true },
-                icon = { Icon(Icons.Filled.Add, "Localized Description") },
-                text = { Text(text = "ADD") },
-                modifier = Modifier.onGloballyPositioned {
-                    fabHeight = it.size.height
-                }
-            )
-            if (openDialog) {
-                AddMoneyOwedDialog(
-                    openDialog = true,
-                    onDismiss = { openDialog = false },
-                    categories = bankingInfo.categories,
-                    onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem ->
-                        openDialog = false
-                        coroutineScope.launch {
-                            val result = postRequest(
-                                bankingInfo.client,
-                                "http://mcgarage.hopto.org:8085/api/moneyOwed",
-                                bankingInfo.authToken,
-                                listOf(
-                                    Pair("person", personText),
-                                    Pair("category", selectedItem),
-                                    Pair("description", descriptionText),
-                                    Pair("date", chosenDate),
-                                    Pair("amount", if (amount.isEmpty()) 0.0 else amount.toDouble())
-                                )
-                            )
-                            when {
-                                result.first -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Successfully Updated",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    state.onBalancesUpdatedChange(true)
-                                    state.onOwedUpdatedChange(true)
-                                }
-
-                                else -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Update Failed! ${result.second}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        }
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Scaffold(
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = { openDialog = true },
+                    icon = { Icon(Icons.Filled.Add, "Localized Description") },
+                    text = { Text(text = "ADD") },
+                    modifier = Modifier.onGloballyPositioned {
+                        fabHeight = it.size.height
                     }
                 )
-
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
-    ) {
-        Column {
-            TabRow(selectedTabIndex = tabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = tabIndex == index,
-                        onClick = { tabIndex = index },
-                        text = { Text(title) },
-                        icon = {
-                            when (index) {
-                                0 -> Icon(
-                                    painterResource(id = R.drawable.ic_notpayed),
-                                    contentDescription = "Not Payed"
+                if (openDialog) {
+                    AddMoneyOwedDialog(
+                        openDialog = true,
+                        onDismiss = { openDialog = false },
+                        categories = bankingInfo.categories,
+                        onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem ->
+                            openDialog = false
+                            coroutineScope.launch {
+                                val result = postRequest(
+                                    bankingInfo.client,
+                                    "http://mcgarage.hopto.org:8085/api/moneyOwed",
+                                    bankingInfo.authToken,
+                                    listOf(
+                                        Pair("person", personText),
+                                        Pair("category", selectedItem),
+                                        Pair("description", descriptionText),
+                                        Pair("date", chosenDate),
+                                        Pair(
+                                            "amount",
+                                            if (amount.isEmpty()) 0.0 else amount.toDouble()
+                                        )
+                                    )
                                 )
+                                when {
+                                    result.first -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Successfully Updated",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        state.onBalancesUpdatedChange(true)
+                                        state.onOwedUpdatedChange(true)
+                                    }
 
-                                1 -> Icon(
-                                    painterResource(id = R.drawable.ic_money),
-                                    contentDescription = "Payed"
-                                )
+                                    else -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Update Failed! ${result.second}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             }
                         }
                     )
+
                 }
-            }
-            when (tabIndex) {
-                0 -> NotPayedTab(bankingInfo, state, heightInDp)
-                1 -> PayedTab(bankingInfo, state, heightInDp)
+            },
+            floatingActionButtonPosition = FabPosition.End,
+        ) {
+            Column {
+                TabRow(selectedTabIndex = tabIndex) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = tabIndex == index,
+                            onClick = { tabIndex = index },
+                            text = { Text(title) },
+                            icon = {
+                                when (index) {
+                                    0 -> Icon(
+                                        painterResource(id = R.drawable.ic_notpayed),
+                                        contentDescription = "Not Payed"
+                                    )
+
+                                    1 -> Icon(
+                                        painterResource(id = R.drawable.ic_money),
+                                        contentDescription = "Payed"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+                when (tabIndex) {
+                    0 -> NotPayedTab(bankingInfo, state, heightInDp)
+                    1 -> PayedTab(bankingInfo, state, heightInDp)
+                }
             }
         }
     }

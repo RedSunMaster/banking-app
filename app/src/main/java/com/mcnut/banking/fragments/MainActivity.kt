@@ -1,11 +1,10 @@
 package com.mcnut.banking.fragments
 
-import com.mcnut.banking.screens.SplashScreen
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +19,7 @@ import com.mcnut.banking.helpers.StoreDarkMode
 import com.mcnut.banking.helpers.getRequest
 import com.mcnut.banking.screens.AccountScreen
 import com.mcnut.banking.screens.MainActivityScreen
+import com.mcnut.banking.screens.SplashScreen
 import com.mcnut.banking.types.BalanceItem
 import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.Data
@@ -28,6 +28,7 @@ import com.mcnut.banking.types.Transaction
 import com.mcnut.banking.types.TransactionSummary
 import com.mcnut.banking.types.TrendSummary
 import com.mcnut.banking.types.UserItem
+import com.mcnut.banking.types.WeekSummary
 import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -35,11 +36,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.json.JSONArray
-import java.lang.Math.abs
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private val client = OkHttpClient.Builder().build()
@@ -59,6 +61,9 @@ class MainActivity : AppCompatActivity() {
             val showSplash = remember { mutableStateOf(true) }
             val userToken = runBlocking { dataStore.getAuthToken.firstOrNull() }
             val darkModeFlow = runBlocking {storeDarkMode.getDarkMode.firstOrNull()}
+            var darkModeToggle by remember {
+                mutableStateOf(false)
+            }
             LaunchedEffect(userToken) {
                 if (!userToken.isNullOrEmpty()) {
                     val result = withContext(Dispatchers.IO) {
@@ -73,15 +78,17 @@ class MainActivity : AppCompatActivity() {
                     canLogin.value = success
                 }
             }
+            val systemDarkMode = isSystemInDarkTheme()
             LaunchedEffect (darkModeFlow) {
+
                 if (darkModeFlow.isNotNull()) {
                     when (darkModeFlow) {
-                        0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                        1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                        2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        0 -> darkModeToggle = false
+                        1 -> darkModeToggle = true
+                        2 -> darkModeToggle = systemDarkMode
                     }
                 } else {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    darkModeToggle = systemDarkMode
                 }
             }
 
@@ -119,24 +126,24 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     if (showSplash.value) {
-                        BudgetingTheme {
-                            SplashScreen()
+                        BudgetingTheme(darkModeToggle) {
+                            SplashScreen(darkModeToggle)
                         }
                     } else {
                         if (!valuesGotten.value) {
-                            BudgetingTheme {
-                                SplashScreen()
+                            BudgetingTheme(darkModeToggle) {
+                                SplashScreen(darkModeToggle)
                             }
                         } else {
-                            BudgetingTheme {
-                                MainActivityScreen(data = data.value, authToken = userToken!!)
+                            BudgetingTheme(darkModeToggle) {
+                                MainActivityScreen(data = data.value, authToken = userToken!!, darkModeToggle)
                             }
                         }
                     }
                 }
                 else -> {
-                    BudgetingTheme {
-                        AccountScreen()
+                    BudgetingTheme(darkModeToggle) {
+                        AccountScreen(darkModeToggle)
                     }
                 }
             }
@@ -240,7 +247,7 @@ suspend fun getUser(client: OkHttpClient, authToken: String): List<UserItem> {
 
 suspend fun getTransactions(client: OkHttpClient, authToken: String): Triple<List<Transaction>, List<TrendSummary>, List<TransactionSummary>> {
     val transactionsResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/transactions", authToken, listOf())
-    if (transactionsResult.first) {
+    if (transactionsResult.first && JSONArray(transactionsResult.second.toString()).length() != 0) {
         val jsonArray = JSONArray(transactionsResult.second.toString())
         val transactionList = List(jsonArray.length()) { index ->
             val jsonObject = jsonArray.getJSONObject(index)
@@ -272,7 +279,7 @@ suspend fun getTransactions(client: OkHttpClient, authToken: String): Triple<Lis
 
 fun getTrendSummary(transactionList: List<Transaction>): List<TrendSummary> {
     return transactionList
-        .filter { it.TransType == "Withdraw" }
+        .filter { it.TransType == "Withdraw" && !it.Description.contains("Balancing") && !it.Description.contains("Trans") }
         .groupBy { Triple(LocalDate.parse(it.Date).year, LocalDate.parse(it.Date).month, it.Category) }
         .map { (yearMonthCategory, transactions) ->
             val year = yearMonthCategory.first
@@ -283,27 +290,67 @@ fun getTrendSummary(transactionList: List<Transaction>): List<TrendSummary> {
         }
 }
 
+fun getLastWeeklySummary(transactionList: List<Transaction>): List<WeekSummary> {
+    val weekFields = WeekFields.of(Locale.getDefault()) // Get the WeekFields for the default locale
+    return transactionList
+        .asSequence()
+        .filter { it.TransType == "Withdraw" && !it.Description.contains("Balancing") && !it.Description.contains("Trans") }
+        .filter { LocalDate.parse(it.Date).get(weekFields.weekOfYear()) == LocalDate.now().get(weekFields.weekOfYear()) - 1 } // Filter by previous week using WeekFields
+        .filter { LocalDate.parse(it.Date).year == LocalDate.now().year}
+        .groupBy { Triple(LocalDate.parse(it.Date).year, LocalDate.parse(it.Date).get(weekFields.weekOfYear()), it.Category) }
+        .map { (yearWeekCategory, transactions) ->
+            val category = yearWeekCategory.third
+            val totalCost = transactions.sumOf { kotlin.math.abs(it.Amount) }
+            WeekSummary(category, totalCost)
+        }
+        .toList()
+}
+
+fun getThisWeeklySummary(transactionList: List<Transaction>): List<WeekSummary> {
+    val weekFields = WeekFields.of(Locale.getDefault()) // Get the WeekFields for the default locale
+    return transactionList
+        .asSequence()
+        .filter { it.TransType == "Withdraw" && !it.Description.contains("Balancing") && !it.Description.contains("Trans") }
+        .filter { LocalDate.parse(it.Date).get(weekFields.weekOfYear()) == LocalDate.now().get(weekFields.weekOfYear())}
+        .filter { LocalDate.parse(it.Date).year == LocalDate.now().year}
+        .groupBy { Triple(LocalDate.parse(it.Date).year, LocalDate.parse(it.Date).get(weekFields.weekOfYear()), it.Category) }
+        .map { (yearWeekCategory, transactions) ->
+            val category = yearWeekCategory.third
+            val totalCost = transactions.sumOf { kotlin.math.abs(it.Amount) }
+            WeekSummary(category, totalCost)
+        }
+        .toList()
+}
+
+
 
 fun getTransactionSummary(transactionList: List<Transaction>): List<TransactionSummary> {
+    val today = LocalDate.now()
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val maxDate = transactionList.filter { LocalDate.parse(it.Date, formatter).year == today.year }.maxOf { LocalDate.parse(it.Date, formatter) }
     val cte = transactionList
         .filter { it.TransType == "Withdraw" && !it.Description.contains("Balancing") && !it.Description.contains("Trans") }
-        .groupBy { Triple(LocalDate.parse(it.Date).year, it.Description, it.Category) }
-        .map { (yearItemCategory, transactions) ->
-            val year = yearItemCategory.first
-            val item = yearItemCategory.second
-            val category = yearItemCategory.third
+        .filter { LocalDate.parse(it.Date, formatter).let { it.monthValue < maxDate.monthValue || (it.monthValue == maxDate.monthValue && it.dayOfMonth <= maxDate.dayOfMonth) } }
+        .groupBy { Triple(LocalDate.parse(it.Date, formatter).month, it.Description, it.Category ) }
+
+        .map { (monthItemCategory, transactions) ->
+            val month = monthItemCategory.first
+            val item = monthItemCategory.second
+            val category = monthItemCategory.third
             val amount = transactions.size
             val cost = transactions.sumOf { kotlin.math.abs(it.Amount) }
             val avgCost = cost / amount
-            TransactionSummary(year, item, amount, cost, avgCost, category, 0.0)
+            TransactionSummary(month.value, item, amount, cost, avgCost, category, 0.0)
         }
 
     return cte.map { transactionSummary ->
-        val previousYearCost = cte.filter { it.Item == transactionSummary.Item && it.Category == transactionSummary.Category && it.Year < transactionSummary.Year }.maxByOrNull { it.Year }?.Cost ?: 0.0
-        val percentageDifference = if (previousYearCost == 0.0) 0.0 else (transactionSummary.Cost - previousYearCost) / previousYearCost * 100
+        val previousMonthCost = cte.filter { it.Item == transactionSummary.Item && it.Category == transactionSummary.Category && it.Month < transactionSummary.Month }.maxByOrNull { it.Month }?.Cost ?: 0.0
+        val percentageDifference = if (previousMonthCost == 0.0) 0.0 else (transactionSummary.Cost - previousMonthCost) / previousMonthCost * 100
         transactionSummary.copy(PercentageDifference = percentageDifference)
-    }.sortedWith(compareBy({ it.Year }, { it.Category }, { -it.Amount }, { -it.Cost }))
+    }.sortedWith(compareBy({ it.Month }, { it.Category }, { -it.Amount }, { -it.Cost }))
 }
+
+
 
 suspend fun updateData(client: OkHttpClient, authToken: String): Data {
     val categories = getCategories(client, authToken)

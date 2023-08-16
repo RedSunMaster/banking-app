@@ -55,6 +55,7 @@ import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
 import com.mcnut.banking.types.Transaction
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -102,7 +103,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
 
     }
 
-
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
@@ -111,8 +112,9 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                         if (totalPercentage == 100.0) {
                             bankingInfo.categories.forEach { category ->
                                 if (categoryAmounts[category.category] != 0.0 && categoryAmounts[category.category] != null) {
-                                    val inputDate = getDate(System.currentTimeMillis(), "yyyy-MM-dd")
-                                    val inputAmount = categoryAmounts[category.category]?: 0.0
+                                    val inputDate =
+                                        getDate(System.currentTimeMillis(), "yyyy-MM-dd")
+                                    val inputAmount = categoryAmounts[category.category] ?: 0.0
                                     val inputDescription = "Income"
                                     val inputTransType = "Deposit"
                                     val transactionToAdd = Transaction(
@@ -155,7 +157,11 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             state.onBalancesUpdatedChange(true)
                             state.onTransactionUpdatedChange(true)
                         } else {
-                            Toast.makeText(context, "FAILED! Please Reach 100% Allocation", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "FAILED! Please Reach 100% Allocation",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     },
                     icon = { Icon(Icons.Filled.Add, "") },
@@ -168,8 +174,8 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
             floatingActionButtonPosition = FabPosition.End,
             modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) { _ ->
-            Box (modifier = Modifier.fillMaxSize()) {
-                Column (modifier = Modifier.fillMaxSize()){
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
                     Text(
                         text = "Income",
                         style = MaterialTheme.typography.headlineSmall,
@@ -187,7 +193,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             updated = true
                         },
                         label = { Text("Income") },
-                        leadingIcon = {Icon(painterResource(id = R.drawable.ic_money), "Money")},
+                        leadingIcon = { Icon(painterResource(id = R.drawable.ic_money), "Money") },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Done
@@ -198,7 +204,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                         maxLines = 1,
                         modifier = Modifier.fillMaxWidth(),
 
-                    )
+                        )
                     Text(
                         text = String.format("%.2f", totalPercentage) + "%",
                         style = MaterialTheme.typography.bodyMedium,
@@ -251,7 +257,8 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                             if (it.length <= 6) {
                                                 percentageString = it
                                                 try {
-                                                    categoryPercents[category.category] = percentageString.toDouble()
+                                                    categoryPercents[category.category] =
+                                                        percentageString.toDouble()
                                                 } catch (e: Exception) {
                                                     categoryPercents[category.category] = 0.0
                                                 }
@@ -274,6 +281,7 @@ fun IncomeScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     }
                 }
             }
+        }
     }
 }
 

@@ -3,7 +3,7 @@
 package com.mcnut.banking.settings
 
 import android.annotation.SuppressLint
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,69 +27,75 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.helpers.StoreDarkMode
+import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThemeSettings() {
+fun ThemeSettings(state: DatabaseInformation) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val storeDarkMode = StoreDarkMode(context)
     var expanded by remember { mutableStateOf(false) }
     val items = listOf("Light Mode", "Dark Mode", "Match System")
     val selectedIndex by storeDarkMode.getDarkMode.collectAsState(initial = 2)
-
-    Scaffold(
-        modifier = Modifier.padding(end = 24.dp, start = 16.dp)
-    ) {
-        Row {
-            Box {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = {
-                        expanded = !expanded
-                    },
-                ) {
-
-                    OutlinedTextField(
-                        value = items[selectedIndex],
-                        readOnly = true,
-                        onValueChange = { },
-                        label = { Text(text = "Theme") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(
-                                expanded = expanded
-                            )
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                            .onFocusChanged { state ->
-                                if (state.isFocused) {
-                                    expanded = true
-
-                                }
-                            }
-                    )
-                    ExposedDropdownMenu(
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Scaffold(
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
+        ) {
+            Row {
+                Box {
+                    ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false },
+                        onExpandedChange = {
+                            expanded = !expanded
+                        },
                     ) {
-                        items.forEachIndexed { index, label ->
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                onClick = {
-                                    expanded = false
-                                    when (index) {
-                                        0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                                        1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                                        2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+
+                        OutlinedTextField(
+                            value = items[selectedIndex],
+                            readOnly = true,
+                            onValueChange = { },
+                            label = { Text(text = "Theme") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expanded
+                                )
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .onFocusChanged { state ->
+                                    if (state.isFocused) {
+                                        expanded = true
+
                                     }
-                                    coroutineScope.launch {
-                                        StoreDarkMode(context).saveDarkMode(index)
-                                    }
-                                })
+                                }
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ) {
+                            val systemDarkMode = isSystemInDarkTheme()
+                            items.forEachIndexed { index, label ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        expanded = false
+                                        when (index) {
+                                            0 -> state.onDarkModeUpdate(false)
+
+                                            1 -> state.onDarkModeUpdate(true)
+
+                                            2 -> state.onDarkModeUpdate(systemDarkMode)
+                                        }
+                                        coroutineScope.launch {
+                                            StoreDarkMode(context).saveDarkMode(index)
+                                        }
+                                    })
+                            }
                         }
                     }
                 }

@@ -42,6 +42,7 @@ import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.CategoryItem
 import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -57,121 +58,129 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val showDialog = remember { mutableStateOf(false) }
     var fabHeight by remember { mutableIntStateOf(0) }
 
-    Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text(text = "ADD CATEGORY") },
-                onClick = {
-                    showDialog.value = true
-                },
-                icon = { Icon(Icons.Filled.Add, "") },
-                modifier = Modifier.onGloballyPositioned {
-                    fabHeight = it.size.height
-                }
-            )
-            if (showDialog.value){
-                AddCategoryDialog(openDialog = showDialog.value, onSubmit = { newCategoryText, newCategoryColour ->
-                    coroutineScope.launch {
-                        val result = postRequest(bankingInfo.client,
-                            "http://mcgarage.hopto.org:8085/api/categories", bankingInfo.authToken,listOf(
-                                Pair("categoryName", newCategoryText),
-                                Pair("colour", newCategoryColour),
-                            )
-                        )
-                        when {
-                            result.first -> {
-                                Toast.makeText(
-                                    context,
-                                    "Successfully Added Category",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                state.onCategoryUpdatedChange(true)
-                            }
-
-                            else -> {
-                                Toast.makeText(
-                                    context,
-                                    "Category Addition Failed:  ${result.second}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                        showDialog.value = false
-                    }
-                }, onDismiss = {showDialog.value = false})
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End,
-        modifier = Modifier.padding(end = 24.dp, start=16.dp)
-    ) { _ ->
-        Column{
-            LazyColumn(modifier = Modifier.height(600.dp)) {
-                items(items) { item ->
-
-                    ListItem(
-                        leadingContent = {
-                            IconButton(
-                                onClick = {
-                                    showEditDialog.value = true
-                                    currentCategoryItem = item
-                                }) {
-                                Icon(Icons.Filled.Edit, contentDescription = null)
-                            }
-                        },
-                        headlineContent = { Text(item.category, fontSize = 20.sp) },
-                        trailingContent = {
-                            Box(
-                                modifier = Modifier
-                                    .width(20.dp)
-                                    .height(20.dp)
-                                    .clip(RoundedCornerShape(10))
-                                    .background(item.colour)
-                            )
-                        },
-                    )
-                }
-            }
-            if (showEditDialog.value) {
-                EditCategoryDialog(
-                    openDialog = showEditDialog.value,
-                    currentCategoryItem = currentCategoryItem!!,
-                    onDismiss = { showEditDialog.value = false },
-                    onSubmit = { newCategoryText, newCategoryColour, categoryId ->
-                        Log.d("WORKING", newCategoryText)
-                        showEditDialog.value = false
-                        coroutineScope.launch {
-                            val result = patchRequest(
-                                bankingInfo.client,
-                                "http://mcgarage.hopto.org:8085/api/categories",
-                                bankingInfo.authToken,
-                                listOf(
-                                    Pair("categoryName", newCategoryText),
-                                    Pair("colour", newCategoryColour),
-                                    Pair("categoryId", categoryId),
-                                )
-                            )
-                            when {
-                                result.first -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Successfully Updated",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    state.onCategoryUpdatedChange(true)
-
-                                }
-
-                                else -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Update Failed! ${result.second}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                        }
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Scaffold(
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    text = { Text(text = "ADD CATEGORY") },
+                    onClick = {
+                        showDialog.value = true
+                    },
+                    icon = { Icon(Icons.Filled.Add, "") },
+                    modifier = Modifier.onGloballyPositioned {
+                        fabHeight = it.size.height
                     }
                 )
+                if (showDialog.value) {
+                    AddCategoryDialog(
+                        openDialog = showDialog.value,
+                        onSubmit = { newCategoryText, newCategoryColour ->
+                            coroutineScope.launch {
+                                val result = postRequest(
+                                    bankingInfo.client,
+                                    "http://mcgarage.hopto.org:8085/api/categories",
+                                    bankingInfo.authToken,
+                                    listOf(
+                                        Pair("categoryName", newCategoryText),
+                                        Pair("colour", newCategoryColour),
+                                    )
+                                )
+                                when {
+                                    result.first -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Successfully Added Category",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        state.onCategoryUpdatedChange(true)
+                                    }
+
+                                    else -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Category Addition Failed:  ${result.second}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                                showDialog.value = false
+                            }
+                        },
+                        onDismiss = { showDialog.value = false })
+                }
+            },
+            floatingActionButtonPosition = FabPosition.End,
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
+        ) { _ ->
+            Column {
+                LazyColumn(modifier = Modifier.height(600.dp)) {
+                    items(items) { item ->
+
+                        ListItem(
+                            leadingContent = {
+                                IconButton(
+                                    onClick = {
+                                        showEditDialog.value = true
+                                        currentCategoryItem = item
+                                    }) {
+                                    Icon(Icons.Filled.Edit, contentDescription = null)
+                                }
+                            },
+                            headlineContent = { Text(item.category, fontSize = 20.sp) },
+                            trailingContent = {
+                                Box(
+                                    modifier = Modifier
+                                        .width(20.dp)
+                                        .height(20.dp)
+                                        .clip(RoundedCornerShape(10))
+                                        .background(item.colour)
+                                )
+                            },
+                        )
+                    }
+                }
+                if (showEditDialog.value) {
+                    EditCategoryDialog(
+                        openDialog = showEditDialog.value,
+                        currentCategoryItem = currentCategoryItem!!,
+                        onDismiss = { showEditDialog.value = false },
+                        onSubmit = { newCategoryText, newCategoryColour, categoryId ->
+                            Log.d("WORKING", newCategoryText)
+                            showEditDialog.value = false
+                            coroutineScope.launch {
+                                val result = patchRequest(
+                                    bankingInfo.client,
+                                    "http://mcgarage.hopto.org:8085/api/categories",
+                                    bankingInfo.authToken,
+                                    listOf(
+                                        Pair("categoryName", newCategoryText),
+                                        Pair("colour", newCategoryColour),
+                                        Pair("categoryId", categoryId),
+                                    )
+                                )
+                                when {
+                                    result.first -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Successfully Updated",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        state.onCategoryUpdatedChange(true)
+
+                                    }
+
+                                    else -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Update Failed! ${result.second}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     }

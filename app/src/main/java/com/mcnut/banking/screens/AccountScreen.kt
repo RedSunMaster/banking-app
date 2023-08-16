@@ -66,10 +66,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun AccountScreen() {
+fun AccountScreen(darkModeToggle: Boolean) {
     val tabs = listOf("Login", "Register")
     var tabIndex by remember { mutableIntStateOf(0) }
-    BudgetingTheme(true) {
+    BudgetingTheme(darkTheme = darkModeToggle) {
         Scaffold(
             topBar = {
                 TopAppBar(

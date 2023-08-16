@@ -39,6 +39,7 @@ import com.mcnut.banking.helpers.CategoryDropdown
 import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -62,7 +63,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
     selectedToItem = try {
         categoryList[1]
     } catch (e: Exception) {""}
-
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
@@ -72,8 +73,11 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                             val currentDate = sdf.format(Date())
                             val inputAmount = if (amount.isEmpty()) 0.0 else amount.toDouble()
-                            val fromResult = postRequest(bankingInfo.client,
-                                "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken,listOf(
+                            val fromResult = postRequest(
+                                bankingInfo.client,
+                                "http://mcgarage.hopto.org:8085/api/transactions",
+                                bankingInfo.authToken,
+                                listOf(
                                     Pair("category", selectedFromItem),
                                     Pair("date", currentDate),
                                     Pair("description", "Trans - $selectedToItem"),
@@ -83,8 +87,11 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             )
                             when {
                                 fromResult.first -> {
-                                    val toResult = postRequest(bankingInfo.client,
-                                        "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken,listOf(
+                                    val toResult = postRequest(
+                                        bankingInfo.client,
+                                        "http://mcgarage.hopto.org:8085/api/transactions",
+                                        bankingInfo.authToken,
+                                        listOf(
                                             Pair("category", selectedToItem),
                                             Pair("date", currentDate),
                                             Pair("description", "Trans - $selectedFromItem"),
@@ -100,7 +107,9 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                                 Toast.LENGTH_SHORT
                                             ).show()
 
-                                        } else -> {
+                                        }
+
+                                        else -> {
                                             Toast.makeText(
                                                 context,
                                                 "Transfer Failed: ${toResult.second}",
@@ -109,8 +118,10 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                         }
                                     }
                                     state.onBalancesUpdatedChange(true)
-                                    state.onOwedUpdatedChange(true)
-                                } else -> {
+                                    state.onTransactionUpdatedChange(true)
+                                }
+
+                                else -> {
                                     Toast.makeText(
                                         context,
                                         "Transfer Failed: ${fromResult.second}",
@@ -118,17 +129,17 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                     ).show()
                                 }
                             }
-                            }
-                        },
-                    icon = { Icon(Icons.Filled.Add, "")}
+                        }
+                    },
+                    icon = { Icon(Icons.Filled.Add, "") }
                 )
             },
-            modifier = Modifier.padding(end = 24.dp, start=16.dp)
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) { _ ->
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top=rowPadding)
+                    modifier = Modifier.padding(top = rowPadding)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_send),
@@ -147,7 +158,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top=rowPadding)
+                    modifier = Modifier.padding(top = rowPadding)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_receive),
@@ -167,7 +178,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top=rowPadding)
+                    modifier = Modifier.padding(top = rowPadding)
                 ) {
                     Icon(
                         painterResource(id = R.drawable.ic_money),
@@ -178,13 +189,13 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                         value = amount,
                         onValueChange = { amount = it },
                         label = { Text("Amount") },
-                        leadingIcon = {Icon(painterResource(id = R.drawable.ic_money), "Money")},
+                        leadingIcon = { Icon(painterResource(id = R.drawable.ic_money), "Money") },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = {keyboardController?.hide()}
+                            onDone = { keyboardController?.hide() }
                         ),
                         maxLines = 1,
                         modifier = Modifier.fillMaxWidth(),
@@ -192,4 +203,5 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                 }
             }
         }
+    }
 }

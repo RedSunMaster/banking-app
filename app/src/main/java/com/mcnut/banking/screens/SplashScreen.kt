@@ -14,15 +14,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mcnut.banking.ui.theme.BudgetingTheme
 
 @Composable
-fun SplashScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        // Your loading animation or image here
-        Column (horizontalAlignment = Alignment.CenterHorizontally){
-            CircularProgressIndicator()
-            Spacer(Modifier.height(8.dp))
-            Text(text = "Connecting to server", modifier = Modifier.padding(top = 8.dp), fontWeight = FontWeight.Bold, color = Color.White)
+fun SplashScreen(darkModeToggle: Boolean) {
+    BudgetingTheme(darkTheme = darkModeToggle) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // Your loading animation or image here
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator()
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Connecting to server",
+                    modifier = Modifier.padding(top = 8.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
         }
     }
 }

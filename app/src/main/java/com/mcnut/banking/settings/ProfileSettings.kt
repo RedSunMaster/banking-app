@@ -23,84 +23,88 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.R
 import com.mcnut.banking.types.BankingInfo
+import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ProfileSettings(bankingInfo: BankingInfo) {
+fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val firstName by remember { mutableStateOf(bankingInfo.user[0].firstName) }
     val lastName by remember { mutableStateOf(bankingInfo.user[0].lastName) }
     val email by remember { mutableStateOf(bankingInfo.user[0].email) }
     val phone by remember { mutableStateOf(bankingInfo.user[0].phone) }
     val rowPadding = 10.dp
-    Column(
-        modifier = Modifier.padding(end = 24.dp, start = 16.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = rowPadding)
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Column(
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) {
-            Icon(
-                painterResource(id = R.drawable.ic_name),
-                contentDescription = "Money icon",
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            OutlinedTextField(
-                value = firstName,
-                onValueChange = { /*TODO*/ },
-                label = { Text("First Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = rowPadding)
-        ) {
-            Icon(
-                painterResource(id = R.drawable.ic_name),
-                contentDescription = "Money icon",
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            OutlinedTextField(
-                value = lastName,
-                onValueChange = { /*TODO*/ },
-                label = { Text("Last Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = rowPadding)
-        ) {
-            Icon(
-                painterResource(id = R.drawable.ic_email),
-                contentDescription = "Money icon",
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            OutlinedTextField(
-                value = email,
-                onValueChange = { /*TODO*/ },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = rowPadding)
-        ) {
-            Icon(
-                painterResource(id = R.drawable.ic_phone),
-                contentDescription = "Money icon",
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { /*TODO*/ },
-                label = { Text("Phone") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = rowPadding)
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_name),
+                    contentDescription = "Money icon",
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                OutlinedTextField(
+                    value = firstName,
+                    onValueChange = { /*TODO*/ },
+                    label = { Text("First Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = rowPadding)
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_name),
+                    contentDescription = "Money icon",
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = { /*TODO*/ },
+                    label = { Text("Last Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = rowPadding)
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_email),
+                    contentDescription = "Money icon",
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { /*TODO*/ },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = rowPadding)
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_phone),
+                    contentDescription = "Money icon",
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { /*TODO*/ },
+                    label = { Text("Phone") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

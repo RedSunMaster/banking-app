@@ -1,7 +1,7 @@
 package com.mcnut.banking.types
 
 data class TransactionSummary(
-    val Year: Int,
+    val Month: Int,
     val Item: String,
     val Amount: Int,
     val Cost: Double,

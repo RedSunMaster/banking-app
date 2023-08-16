@@ -67,6 +67,7 @@ import com.mcnut.banking.types.Transaction
 import com.mcnut.banking.types.TransactionSummary
 import com.mcnut.banking.types.TrendSummary
 import com.mcnut.banking.types.UserItem
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 import okhttp3.Cache
 import okhttp3.OkHttpClient
@@ -76,11 +77,12 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainActivityScreen(data: Data, authToken: String) {
+fun MainActivityScreen(data: Data, authToken: String, darkModeToggle: Boolean) {
     val navItems = listOf(
         Screen.Balances,
         Screen.MoneyOwed,
-        Screen.Transfer
+        Screen.Transfer,
+        Screen.Stats
     )
     val drawerItems = listOf(
         Screen.Budget
@@ -105,6 +107,7 @@ fun MainActivityScreen(data: Data, authToken: String) {
         Screen.CategorySettings.route -> Screen.CategorySettings.title
         Screen.ProfileSettings.route -> Screen.ProfileSettings.title
         Screen.ServerDown.route -> Screen.ServerDown.title
+        Screen.Stats.route -> Screen.Stats.title
         else -> null
     }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -128,6 +131,8 @@ fun MainActivityScreen(data: Data, authToken: String) {
     var balancesUpdated by remember { mutableStateOf(false) }
     var updateAll by remember { mutableStateOf(false) }
 
+    val darkMode = remember { mutableStateOf(darkModeToggle)}
+
     val state = DatabaseInformation(
         categoryUpdated = categoriesUpdated,
         owedUpdated = owedUpdated,
@@ -139,7 +144,9 @@ fun MainActivityScreen(data: Data, authToken: String) {
         onTransactionUpdatedChange = { newTransactionUpdated -> transactionsUpdated = newTransactionUpdated },
         onBalancesUpdatedChange = { newBalancesUpdated -> balancesUpdated = newBalancesUpdated },
         onUpdateAllChange = {newUpdateAll -> updateAll = newUpdateAll},
-        navController = navController
+        navController = navController,
+        darkModeToggle = darkMode.value,
+        onDarkModeUpdate = { newDarkMode -> darkMode.value = newDarkMode}
     )
 
     val cacheSize = 10 * 1024 * 5096 // 10 MB
@@ -201,10 +208,12 @@ fun MainActivityScreen(data: Data, authToken: String) {
             val result = getTransactions(client, authToken)
             transactions = result.first
             monthlyTrends = result.second
+            alikeTransactions = result.third
             transactionsUpdated = false
         }
     }
-    ModalNavigationDrawer(
+    BudgetingTheme(darkTheme = darkMode.value) {
+        ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet {
@@ -362,17 +371,34 @@ fun MainActivityScreen(data: Data, authToken: String) {
                     composable(Screen.Balances.route) { AccountBalancesScreen(state, bankingInfo) }
                     composable(Screen.MoneyOwed.route) { MoneyOwed(state, bankingInfo) }
                     composable(Screen.Transfer.route) { TransferScreen(state, bankingInfo) }
-                    composable(Screen.Transactions.route, arguments = listOf(navArgument("item") { type = NavType.StringType })) { backStackEntry -> AllTransactionsScreen(state, bankingInfo, backStackEntry, stats) }
+                    composable(Screen.Stats.route) { StatsScreen(state, bankingInfo) }
+                    composable(
+                        Screen.Transactions.route,
+                        arguments = listOf(navArgument("item") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        AllTransactionsScreen(
+                            state,
+                            bankingInfo,
+                            backStackEntry,
+                            stats
+                        )
+                    }
                     composable(Screen.Budget.route) { IncomeScreen(state, bankingInfo) }
-                    composable(Screen.Settings.route) { SettingsScreen(navController) }
-                    composable(Screen.ThemeSettings.route) { ThemeSettings() }
-                    composable(Screen.CategorySettings.route) { CategorySettings(state, bankingInfo) }
-                    composable(Screen.ProfileSettings.route) { ProfileSettings(bankingInfo) }
-                    composable(Screen.ServerDown.route) { ServerDownScreen() }
+                    composable(Screen.Settings.route) { SettingsScreen(state, navController) }
+                    composable(Screen.ThemeSettings.route) { ThemeSettings(state ) }
+                    composable(Screen.CategorySettings.route) {
+                        CategorySettings(
+                            state,
+                            bankingInfo
+                        )
+                    }
+                    composable(Screen.ProfileSettings.route) { ProfileSettings(state, bankingInfo) }
+                    composable(Screen.ServerDown.route) { ServerDownScreen(state) }
 
 
                 }
             }
+        }
     }
 }
 @Composable
@@ -382,12 +408,14 @@ fun currentRoute(navController: NavController): String? {
 }
 
 @Composable
-fun ServerDownScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Connecting to server...")
+fun ServerDownScreen(state: DatabaseInformation) {
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Connecting to server...")
+            }
         }
     }
 }

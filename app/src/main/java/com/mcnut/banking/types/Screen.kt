@@ -5,6 +5,7 @@ sealed class Screen(val route: String, val title: String, val icon: Int) {
     object Balances : Screen("Balances", "Balances", R.drawable.ic_account_balances)
     object MoneyOwed : Screen("Money Owed", "Money Owed", R.drawable.ic_money_owed)
     object Transfer : Screen("Transfer", "Transfer", R.drawable.ic_transfer)
+    object Stats : Screen("Stats", "Stats", R.drawable.ic_stats)
 
     //Navigation Items
     object Transactions : Screen("Transactions/{item}", "Transactions", R.drawable.ic_transactions)

@@ -54,6 +54,7 @@ import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BalanceItem
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.launch
 
 
@@ -74,7 +75,7 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
     checkedCategories = savedCheckedCategories.associateWith { true }
     var slices by remember { mutableStateOf(listOf<PieChartData.Slice>()) }
 
-
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
                 ExtendedFloatingActionButton(
@@ -87,53 +88,61 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                         fabHeight = it.size.height
                     }
                 )
-                if (showDialog.value){
-                    AddTransactionDialog(openDialog = showDialog.value, categories = categoryList ,onSubmit = { category, date, description, amount, transaction ->
-                        coroutineScope.launch {
-                            val result = postRequest(bankingInfo.client,
-                                "http://mcgarage.hopto.org:8085/api/transactions", bankingInfo.authToken,listOf(
-                                    Pair("category", category),
-                                    Pair("date", date),
-                                    Pair("description", description),
-                                    Pair("amount", amount),
-                                    Pair("trans_type", transaction)
+                if (showDialog.value) {
+                    AddTransactionDialog(openDialog = showDialog.value,
+                        categories = categoryList,
+                        onSubmit = { category, date, description, amount, transaction ->
+                            coroutineScope.launch {
+                                val result = postRequest(
+                                    bankingInfo.client,
+                                    "http://mcgarage.hopto.org:8085/api/transactions",
+                                    bankingInfo.authToken,
+                                    listOf(
+                                        Pair("category", category),
+                                        Pair("date", date),
+                                        Pair("description", description),
+                                        Pair("amount", amount),
+                                        Pair("trans_type", transaction)
+                                    )
                                 )
-                            )
-                            when {
-                                result.first -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Successfully Added",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    state.onBalancesUpdatedChange(true)
-                                    state.onTransactionUpdatedChange(true)
-                                }
+                                when {
+                                    result.first -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Successfully Added",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        state.onBalancesUpdatedChange(true)
+                                        state.onTransactionUpdatedChange(true)
+                                    }
 
-                                else -> {
-                                    Toast.makeText(
-                                        context,
-                                        "Addition Failed! ${result.second}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    else -> {
+                                        Toast.makeText(
+                                            context,
+                                            "Addition Failed! ${result.second}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
+                                showDialog.value = false
                             }
-                            showDialog.value = false
-                        }
-                    }, onDismiss = {showDialog.value = false},
+                        },
+                        onDismiss = { showDialog.value = false },
                         selectedCategory = null
                     )
                 }
             },
             floatingActionButtonPosition = FabPosition.End,
-            modifier = Modifier.padding(end = 24.dp, start=16.dp)
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) { _ ->
-            Column(modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .wrapContentHeight()
-                .fillMaxWidth()
-                .padding(PaddingValues(bottom = heightInDp * 2))
-                .background(Color.Transparent))
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .padding(PaddingValues(bottom = heightInDp * 2))
+                    .background(Color.Transparent)
+            )
             {
                 items.forEach { item ->
                     ListItem(
@@ -143,7 +152,13 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                                     Screen.Transactions.route.replace("{item}", item.category)
                                 bankingInfo.navController.navigate(route)
                             },
-                        headlineContent = { Text(item.category, fontSize = 20.sp, fontWeight = FontWeight.Bold) },
+                        headlineContent = {
+                            Text(
+                                item.category,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
                         trailingContent = {
                             Text(
                                 "$" + String.format("%.2f", item.amount),
@@ -200,4 +215,5 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                 }
             }
         }
+    }
 }

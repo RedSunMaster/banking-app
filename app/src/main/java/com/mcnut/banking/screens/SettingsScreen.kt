@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.mcnut.banking.types.DatabaseInformation
+import com.mcnut.banking.ui.theme.BudgetingTheme
 
 val buttons = listOf(
     Screen.ThemeSettings,
@@ -24,18 +26,22 @@ val buttons = listOf(
 )
 
 @Composable
-fun SettingsScreen(navController: NavHostController) {
-    Column(
-        modifier = Modifier.padding(end = 24.dp, start = 16.dp)
-    ) {
-        buttons.forEach { button ->
-            ListItem(modifier = Modifier.clip(RoundedCornerShape(20.dp)).clickable
-            { navController.navigate(button.route)},
-                headlineContent = {Text(button.title, fontWeight = FontWeight.Bold)},
-                colors = ListItemDefaults.colors(
-                    containerColor = Color.Black.copy(0.2f)
-                ))
-            Spacer(Modifier.height(8.dp))
+fun SettingsScreen(state: DatabaseInformation, navController: NavHostController) {
+    BudgetingTheme(darkTheme = state.darkModeToggle) {
+        Column(
+            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
+        ) {
+            buttons.forEach { button ->
+                ListItem(
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp)).clickable
+                    { navController.navigate(button.route) },
+                    headlineContent = { Text(button.title, fontWeight = FontWeight.Bold) },
+                    colors = ListItemDefaults.colors(
+                        containerColor = Color.Black.copy(0.2f)
+                    )
+                )
+                Spacer(Modifier.height(8.dp))
+            }
         }
     }
 }
