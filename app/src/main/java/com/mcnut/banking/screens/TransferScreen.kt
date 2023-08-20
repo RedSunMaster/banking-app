@@ -6,15 +6,19 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -28,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -66,8 +71,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
     BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    text = { Text(text = "TRANSFER") },
+                FloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
                             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -131,12 +135,16 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             }
                         }
                     },
-                    icon = { Icon(Icons.Filled.Add, "") }
+                    Modifier.padding(PaddingValues(end =24.dp)).size(75.dp)
                 )
+                {
+                    Icon(painterResource(id = R.drawable.ic_transferadd), "")
+                }
             },
-            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) { _ ->
-            Column {
+            Column(
+                Modifier.padding(end = 24.dp, start = 16.dp)
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = rowPadding)

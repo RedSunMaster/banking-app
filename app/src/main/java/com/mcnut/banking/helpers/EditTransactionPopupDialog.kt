@@ -136,7 +136,7 @@ fun EditTransactionDialogPopup(openDialog: Boolean, transaction: Transaction, ca
                             },
                             label = { Text("Amount") },
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.NumberPassword,
+                                keyboardType = KeyboardType.Decimal,
                                 imeAction = ImeAction.Done
                             ),
                             keyboardActions = KeyboardActions(

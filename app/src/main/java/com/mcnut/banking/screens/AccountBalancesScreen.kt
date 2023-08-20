@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -78,16 +81,18 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
     BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    text = { Text(text = "ADD TRANSACTION") },
+                FloatingActionButton(
                     onClick = {
                         showDialog.value = true
                     },
-                    icon = { Icon(painterResource(id = R.drawable.ic_purchase), "") },
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.onGloballyPositioned {
                         fabHeight = it.size.height
-                    }
+                    }.padding(PaddingValues(end =24.dp)).size(75.dp)
                 )
+                {
+                    Icon(painterResource(id = R.drawable.ic_add), "")
+                }
                 if (showDialog.value) {
                     AddTransactionDialog(openDialog = showDialog.value,
                         categories = categoryList,
@@ -101,7 +106,13 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                                         Pair("category", category),
                                         Pair("date", date),
                                         Pair("description", description),
-                                        Pair("amount", amount),
+                                        Pair(
+                                            "amount", if (transaction == "Withdraw") {
+                                                amount * -1
+                                            } else {
+                                                amount
+                                            }
+                                        ),
                                         Pair("trans_type", transaction)
                                     )
                                 )
@@ -133,13 +144,13 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                 }
             },
             floatingActionButtonPosition = FabPosition.End,
-            modifier = Modifier.padding(end = 24.dp, start = 16.dp)
         ) { _ ->
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .wrapContentHeight()
                     .fillMaxWidth()
+                    .padding(end = 24.dp, start = 16.dp)
                     .padding(PaddingValues(bottom = heightInDp * 2))
                     .background(Color.Transparent)
             )

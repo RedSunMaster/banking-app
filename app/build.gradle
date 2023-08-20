@@ -83,4 +83,10 @@ dependencies {
     implementation "com.patrykandpatrick.vico:compose:1.8.0"
     implementation "com.patrykandpatrick.vico:views:1.8.0"
     implementation "com.patrykandpatrick.vico:compose-m3:1.8.0"
+    implementation "androidx.paging:paging-runtime-ktx:3.2.0"
+    // alternatively - without Android dependencies for tests
+    testImplementation "androidx.paging:paging-common-ktx:3.2.0"
+    // optional - Jetpack Compose integration
+    implementation "androidx.paging:paging-compose:3.2.0"
+
 }

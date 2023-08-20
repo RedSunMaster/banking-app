@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +33,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -92,14 +94,18 @@ fun MoneyOwed(state: DatabaseInformation, bankingInfo: BankingInfo) {
     BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = { openDialog = true },
-                    icon = { Icon(Icons.Filled.Add, "Localized Description") },
-                    text = { Text(text = "ADD") },
+                FloatingActionButton(
+                    onClick = {
+                        openDialog = true
+                    },
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.onGloballyPositioned {
                         fabHeight = it.size.height
-                    }
+                    }.padding(PaddingValues(end =24.dp)).size(75.dp)
                 )
+                {
+                    Icon(painterResource(id = R.drawable.ic_plus), "")
+                }
                 if (openDialog) {
                     AddMoneyOwedDialog(
                         openDialog = true,

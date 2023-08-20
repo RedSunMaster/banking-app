@@ -16,11 +16,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -32,6 +37,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -67,6 +73,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavBackStackEntry
 import co.yml.charts.common.extensions.isNotNull
 import com.mcnut.banking.R
@@ -155,56 +162,71 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
     BudgetingTheme(darkTheme = state.darkModeToggle) {
         Scaffold(
             floatingActionButton = {
-                ExtendedFloatingActionButton(
+                FloatingActionButton(
                     onClick = {
                         showDialog.value = true
                     },
-                    content = {
-                        Icon(painterResource(id = R.drawable.ic_purchase), "")
-                    },
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.onGloballyPositioned {
                         fabHeight = it.size.height
-                    }
+                    }.padding(PaddingValues(end =24.dp)).size(75.dp)
                 )
+                {
+                    Icon(painterResource(id = R.drawable.ic_add), "")
+                }
                 if (showDialog.value) {
                     AddTransactionDialog(
                         openDialog = showDialog.value,
                         categories = bankingInfo.categories,
                         onSubmit = { category, date, description, amount, transaction ->
                             coroutineScope.launch {
-                                val result = postRequest(
-                                    bankingInfo.client,
-                                    "http://mcgarage.hopto.org:8085/api/transactions",
-                                    bankingInfo.authToken,
-                                    listOf(
-                                        Pair("category", category),
-                                        Pair("date", date),
-                                        Pair("description", description),
-                                        Pair("amount", amount),
-                                        Pair("trans_type", transaction)
+                                try {
+                                    val result = postRequest(
+                                        bankingInfo.client,
+                                        "http://mcgarage.hopto.org:8085/api/transactions",
+                                        bankingInfo.authToken,
+                                        listOf(
+                                            Pair("category", category),
+                                            Pair("date", date),
+                                            Pair("description", description),
+                                            Pair(
+                                                "amount", if (transaction == "Withdraw") {
+                                                    amount * -1
+                                                } else {
+                                                    amount
+                                                }
+                                            ),
+                                            Pair("trans_type", transaction)
+                                        )
                                     )
-                                )
-                                when {
-                                    result.first -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Successfully Added",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        state.onBalancesUpdatedChange(true)
-                                        state.onTransactionUpdatedChange(true)
+                                    when {
+                                        result.first -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Successfully Added",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            state.onBalancesUpdatedChange(true)
+                                            state.onTransactionUpdatedChange(true)
+                                        }
+
+                                        else -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Addition Failed! ${result.second}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
 
-                                    else -> {
-                                        Toast.makeText(
-                                            context,
-                                            "Addition Failed! ${result.second}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
+                                    showDialog.value = false
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "Addition Failed!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
-
-                                showDialog.value = false
                             }
                         },
                         onDismiss = { showDialog.value = false },
@@ -247,58 +269,67 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun TransactionsScreen(filterCategory: MutableState<String>, filterText: MutableState<String>, displayedItems: MutableState<List<Transaction>>, bankingInfo: BankingInfo, state: DatabaseInformation,fabHeight: Int) {
+fun TransactionsScreen(
+    filterCategory: MutableState<String>,
+    filterText: MutableState<String>,
+    displayedItems: MutableState<List<Transaction>>,
+    bankingInfo: BankingInfo,
+    state: DatabaseInformation,
+    fabHeight: Int
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     var openDialog by remember { mutableStateOf(false) }
     var currentTransactionItem by remember { mutableStateOf<Transaction?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val heightInDp = with(LocalDensity.current) { fabHeight.toDp() }
+    val listState = rememberLazyListState()
 
-    Column(
+    LazyColumn(
+        state = listState,
         modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .wrapContentHeight()
             .fillMaxWidth()
-            .padding(PaddingValues(bottom = heightInDp * 2))
             .background(Color.Transparent)
     ) {
-        Spacer(Modifier.height(8.dp))
-        CategoryDropdown(
-            padding = true,
-            selectedItem = filterCategory.value,
-            onSelectedItemChange = { newItem ->
-                Log.d("MyComposable", "filterCategory changed: $newItem")
-                filterCategory.value = newItem
-            },
-            categories = bankingInfo.categories,
-        )
-        OutlinedTextField(
-            value = filterText.value,
-            onValueChange = { filterText.value = it },
-            label = {Text("Filter")},
-            maxLines = 1,
-            trailingIcon = { Icon(Icons.Filled.Search, "Search Bar") },
-            modifier = Modifier
-                .fillMaxWidth().padding(horizontal = 16.dp),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = { keyboardController?.hide() }
-            ),
-        )
-        Spacer(Modifier.height(8.dp))
-        Divider(
-            color = Color.LightGray,
-            modifier = Modifier
-                .height(1.dp)
-                .fillMaxHeight()
-                .fillMaxWidth()
-        )
-        displayedItems.value.forEach { transactionItem ->
+        item {
+            Spacer(Modifier.height(8.dp))
+            CategoryDropdown(
+                padding = true,
+                selectedItem = filterCategory.value,
+                onSelectedItemChange = { newItem ->
+                    Log.d("MyComposable", "filterCategory changed: $newItem")
+                    filterCategory.value = newItem
+                },
+                categories = bankingInfo.categories,
+            )
+            OutlinedTextField(
+                value = filterText.value,
+                onValueChange = { filterText.value = it },
+                label = { Text("Filter") },
+                maxLines = 1,
+                trailingIcon = { Icon(Icons.Filled.Search, "Search Bar") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { keyboardController?.hide() }
+                ),
+            )
+            Spacer(Modifier.height(8.dp))
+            Divider(
+                color = Color.LightGray,
+                modifier = Modifier
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
+        }
+        items(displayedItems.value) { transactionItem ->
             ListItem(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -319,6 +350,7 @@ fun TransactionsScreen(filterCategory: MutableState<String>, filterText: Mutable
                 trailingContent = {
                     Text(
                         "$" + String.format("%.2f", transactionItem.Amount),
+                        fontSize = 14.sp
                     )
                 },
             )
@@ -329,9 +361,12 @@ fun TransactionsScreen(filterCategory: MutableState<String>, filterText: Mutable
                     .fillMaxHeight()
                     .fillMaxWidth()
             )
-
+        }
+        item {
+            Spacer(Modifier.height(heightInDp * 2))
         }
     }
+
     if (openDialog) {
         EditTransactionDialogPopup(
             openDialog = true,
@@ -412,6 +447,7 @@ fun TransactionsScreen(filterCategory: MutableState<String>, filterText: Mutable
         )
     }
 }
+
 
 @Composable
 fun StatsScreen(filterCategory: MutableState<String>, displayedAlikeItems: MutableState<List<TransactionSummary>>, bankingInfo: BankingInfo, state: DatabaseInformation, stats: StatsInfo, fabHeight: Int) {

@@ -38,6 +38,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.R
 import com.mcnut.banking.types.CategoryItem
+import java.time.LocalDate.now
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
@@ -46,7 +50,12 @@ fun AddTransactionDialog(openDialog: Boolean, categories: List<CategoryItem>, se
                        onSubmit: (category: String, date: String, description: String, amount: Double, transaction: String) -> Unit) {
     var amount by remember { mutableStateOf("") }
     val showDialog = remember { mutableStateOf(false) }
-    val chosenDate = remember { mutableStateOf("") }
+    var today = now()
+    val formatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val formattedDate =
+        formatter.format(today)
+    val chosenDate = remember { mutableStateOf(formattedDate) }
     var descriptionText by remember { mutableStateOf("") }
     var selectedItem by remember { mutableStateOf("") }
     var switchState by remember { mutableStateOf(false) }
