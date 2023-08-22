@@ -16,10 +16,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +33,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
@@ -54,6 +58,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -196,6 +201,7 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
     val groupedItems = owedItems.groupBy { it.Person }
     val coroutineScope = rememberCoroutineScope()
     var canSend by remember { mutableStateOf(false) }
+    var sendingSMS by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
@@ -213,93 +219,116 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
     }
 
 
-    Column {
-        val totalOwed = if (owedItems.isNotEmpty()) owedItems.sumOf { it.Amount } else 0.0
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Total Owed: $${String.format("%.2f", totalOwed)}", fontSize = 20.sp, modifier = Modifier.padding(8.dp))
-            Spacer(Modifier.weight(1f))
-            IconButton(onClick = {
-                if (ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.SEND_SMS
-                    ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.READ_CONTACTS
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    coroutineScope.launch {
-                        canSend = if (canSend) {
-                            val patchResult = patchRequest(
-                                data.client,
-                                "http://mcgarage.hopto.org:8085/api/sms",
-                                data.authToken,
-                                listOf()
-                            )
-                            if (patchResult.first) {
-                                sendSMSMessagesAsync(groupedItems, smsManager, context)
-                                Toast.makeText(
-                                    context,
-                                    "Sent SMS to owed people",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            false
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "It hasn't been a week since the last SMS was sent.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            false
-                        }
-                    }
-                } else {
-                    launcher.launch(Manifest.permission.SEND_SMS)
-                }
-            }) {
-                Icon(
-                    painter = painterResource(
-                        id = if (canSend) R.drawable.ic_send_sms else R.drawable.ic_cant_send
-                    ),
-                    contentDescription = null
+
+    if (sendingSMS) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // Your loading animation or image here
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator()
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Connecting to server",
+                    modifier = Modifier.padding(top = 8.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
         }
-        LazyColumn(
-            modifier = Modifier.padding(8.dp),
-            contentPadding = PaddingValues(bottom = heightInDp * 2)
-        ) {
-            items(groupedItems.entries.toList()) { (person, items) ->
-                val totalOwedEach = items.sumOf { it.Amount }
-                var showItems by remember { mutableStateOf(false) }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = person,
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+    } else {
+        Column {
+            val totalOwed = if (owedItems.isNotEmpty()) owedItems.sumOf { it.Amount } else 0.0
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Total Owed: $${String.format("%.2f", totalOwed)}",
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(8.dp)
+                )
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.SEND_SMS
+                        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.READ_CONTACTS
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        coroutineScope.launch {
+                            canSend = if (canSend) {
+                                val patchResult = patchRequest(
+                                    data.client,
+                                    "http://mcgarage.hopto.org:8085/api/sms",
+                                    data.authToken,
+                                    listOf()
+                                )
+                                if (patchResult.first) {
+                                    sendingSMS = true
+                                    sendSMSMessagesAsync(groupedItems, smsManager, context)
+                                    sendingSMS = false
+                                    Toast.makeText(
+                                        context,
+                                        "Sent SMS to owed people",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                false
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "It hasn't been a week since the last SMS was sent.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                false
+                            }
+                        }
+                    } else {
+                        launcher.launch(Manifest.permission.SEND_SMS)
+                    }
+                }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (canSend) R.drawable.ic_send_sms else R.drawable.ic_cant_send
+                        ),
+                        contentDescription = null
                     )
+                }
+            }
+            LazyColumn(
+                modifier = Modifier.padding(8.dp),
+                contentPadding = PaddingValues(bottom = heightInDp * 2)
+            ) {
+                items(groupedItems.entries.toList()) { (person, items) ->
+                    val totalOwedEach = items.sumOf { it.Amount }
+                    var showItems by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = person,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        )
 
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "$" + String.format("%.2f", totalOwedEach),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    )
-                    IconButton(onClick = { showItems = !showItems }) {
-                        if (showItems) {
-                            Icon(
-                                painterResource(id = R.drawable.ic_dropless),
-                                contentDescription = "Dropup"
-                            )
-                        } else {
-                            Icon(
-                                painterResource(id = R.drawable.ic_dropdown),
-                                contentDescription = "Dropdown"
-                            )
+                        Spacer(Modifier.weight(1f))
+                        Text(
+                            text = "$" + String.format("%.2f", totalOwedEach),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        )
+                        IconButton(onClick = { showItems = !showItems }) {
+                            if (showItems) {
+                                Icon(
+                                    painterResource(id = R.drawable.ic_dropless),
+                                    contentDescription = "Dropup"
+                                )
+                            } else {
+                                Icon(
+                                    painterResource(id = R.drawable.ic_dropdown),
+                                    contentDescription = "Dropdown"
+                                )
+                            }
                         }
                     }
+                    DisplayItemsList(items, showItems, data, state)
                 }
-                DisplayItemsList(items, showItems, data, state)
             }
         }
     }

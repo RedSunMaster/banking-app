@@ -48,6 +48,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val lastName by remember { mutableStateOf(bankingInfo.user[0].lastName) }
     val email by remember { mutableStateOf(bankingInfo.user[0].email) }
     val phone by remember { mutableStateOf(bankingInfo.user[0].phone) }
+    val depositAccount by remember { mutableStateOf(bankingInfo.user[0].depositAccount) }
     val context = LocalContext.current
 
     val activity = LocalContext.current as Activity
@@ -67,7 +68,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_name),
-                    contentDescription = "Money icon",
+                    contentDescription = "First Name icon",
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
@@ -84,7 +85,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_name),
-                    contentDescription = "Money icon",
+                    contentDescription = "Last Name icon",
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
@@ -101,7 +102,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_email),
-                    contentDescription = "Money icon",
+                    contentDescription = "Email icon",
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
@@ -118,13 +119,30 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_phone),
-                    contentDescription = "Money icon",
+                    contentDescription = "Phone Icon",
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { /*TODO*/ },
                     label = { Text("Phone") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = rowPadding)
+            ) {
+                Icon(
+                    painterResource(id = R.drawable.ic_depositaccount),
+                    contentDescription = "Deposit Account Icon",
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                OutlinedTextField(
+                    value = depositAccount,
+                    onValueChange = { /*TODO*/ },
+                    label = { Text("Deposit Account (For Auto SMS)") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

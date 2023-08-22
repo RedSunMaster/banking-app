@@ -239,7 +239,8 @@ suspend fun getUser(client: OkHttpClient, authToken: String): List<UserItem> {
             val email = jsonObject.getString("email")
             val phone = jsonObject.getString("phone")
             val smsTimestamp = jsonObject.getString("smsTimestamp")
-            UserItem(fName, lName, email, phone, smsTimestamp)
+            val depositAccount = jsonObject.getString("bankAccount")
+            UserItem(fName, lName, email, phone, smsTimestamp, depositAccount)
         }
     }
     return emptyList()

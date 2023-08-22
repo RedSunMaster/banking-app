@@ -7,5 +7,6 @@ data class UserItem(
     val lastName: String,
     val email: String,
     val phone: String,
-    val smsTimestamp: String
+    val smsTimestamp: String,
+    val depositAccount: String
     )
