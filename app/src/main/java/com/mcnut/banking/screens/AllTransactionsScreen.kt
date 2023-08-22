@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,7 +34,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -73,9 +71,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavBackStackEntry
-import co.yml.charts.common.extensions.isNotNull
 import com.mcnut.banking.R
 import com.mcnut.banking.helpers.AddTransactionDialog
 import com.mcnut.banking.helpers.CategoryDropdown
@@ -183,7 +179,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                                 try {
                                     val result = postRequest(
                                         bankingInfo.client,
-                                        "http://mcgarage.hopto.org:8085/api/transactions",
+                                        "http://banking.mcnut.net:8085/api/transactions",
                                         bankingInfo.authToken,
                                         listOf(
                                             Pair("category", category),
@@ -377,7 +373,7 @@ fun TransactionsScreen(
                     coroutineScope.launch {
                         val result = deleteRequest(
                             bankingInfo.client,
-                            "http://mcgarage.hopto.org:8085/api/transactions",
+                            "http://banking.mcnut.net:8085/api/transactions",
                             bankingInfo.authToken,
                             listOf(
                                 Pair("transactionId", id),
@@ -411,7 +407,7 @@ fun TransactionsScreen(
                 coroutineScope.launch {
                     val result = patchRequest(
                         bankingInfo.client,
-                        "http://mcgarage.hopto.org:8085/api/transactions",
+                        "http://banking.mcnut.net:8085/api/transactions",
                         bankingInfo.authToken,
                         listOf(
                             Pair("transactionId", trans_id),

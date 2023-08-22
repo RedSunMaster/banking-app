@@ -29,13 +29,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -121,7 +119,7 @@ fun MoneyOwed(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             coroutineScope.launch {
                                 val result = postRequest(
                                     bankingInfo.client,
-                                    "http://mcgarage.hopto.org:8085/api/moneyOwed",
+                                    "http://banking.mcnut.net:8085/api/moneyOwed",
                                     bankingInfo.authToken,
                                     listOf(
                                         Pair("person", personText),
@@ -253,32 +251,35 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
                             Manifest.permission.READ_CONTACTS
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        coroutineScope.launch {
-                            canSend = if (canSend) {
-                                val patchResult = patchRequest(
-                                    data.client,
-                                    "http://mcgarage.hopto.org:8085/api/sms",
-                                    data.authToken,
-                                    listOf()
-                                )
-                                if (patchResult.first) {
-                                    sendingSMS = true
-                                    sendSMSMessagesAsync(groupedItems, smsManager, context)
-                                    sendingSMS = false
+                        if (canSend) {
+                            coroutineScope.launch {
+                                canSend = if (canSend) {
+                                    val patchResult = patchRequest(
+                                        data.client,
+                                        "http://banking.mcnut.net:8085/api/sms",
+                                        data.authToken,
+                                        listOf()
+                                    )
+                                    if (patchResult.first) {
+                                        sendingSMS = true
+                                        sendSMSMessagesAsync(groupedItems, smsManager, context)
+                                        sendingSMS = false
+                                        Toast.makeText(
+                                            context,
+                                            "Sent SMS to owed people",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    false
+                                } else {
                                     Toast.makeText(
                                         context,
-                                        "Sent SMS to owed people",
+                                        "It hasn't been a week since the last SMS was sent.",
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    false
                                 }
-                                false
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "It hasn't been a week since the last SMS was sent.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                false
+
                             }
                         }
                     } else {
@@ -455,7 +456,7 @@ fun DisplayItemsList(items: List<OwedItem>, showItems: Boolean, bankingInfo: Ban
                                         onClick = {
                                             coroutineScope.launch {
                                                 val result = patchRequest(bankingInfo.client,
-                                                    "http://mcgarage.hopto.org:8085/api/updateOwedItem",
+                                                    "http://banking.mcnut.net:8085/api/updateOwedItem",
                                                     bankingInfo.authToken,
                                                     listOf(Pair("owed_id", item.ID.toString()))
                                                 )
@@ -514,7 +515,7 @@ fun DisplayItemsList(items: List<OwedItem>, showItems: Boolean, bankingInfo: Ban
             onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem, itemId ->
                 openDialog = false
                 coroutineScope.launch {
-                    val result = patchRequest(bankingInfo.client,"http://mcgarage.hopto.org:8085/api/editOwedItem",
+                    val result = patchRequest(bankingInfo.client,"http://banking.mcnut.net:8085/api/editOwedItem",
                         bankingInfo.authToken,listOf(
                             Pair("owed_id", itemId),
                             Pair("person", personText),

@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                     val result = withContext(Dispatchers.IO) {
                         getRequest(
                             client,
-                            "http://mcgarage.hopto.org:8085/api/login",
+                            "http://banking.mcnut.net:8085/api/login",
                             userToken,
                             listOf()
                         )
@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
     }
 }
 suspend fun getCategories(client: OkHttpClient, authToken: String): List<CategoryItem> {
-    val categoriesResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/categories", authToken, listOf())
+    val categoriesResult = getRequest(client, "http://banking.mcnut.net:8085/api/categories", authToken, listOf())
     if (categoriesResult.first) {
         val jsonArray = JSONArray(categoriesResult.second.toString())
         return List(jsonArray.length()) { index ->
@@ -170,7 +170,7 @@ suspend fun getCategories(client: OkHttpClient, authToken: String): List<Categor
 }
 
 suspend fun getBalances(client: OkHttpClient, authToken: String): List<BalanceItem> {
-    val balancesResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/balances", authToken, listOf())
+    val balancesResult = getRequest(client, "http://banking.mcnut.net:8085/api/balances", authToken, listOf())
     if (balancesResult.first) {
         val jsonArray = JSONArray(balancesResult.second.toString())
         return List(jsonArray.length()) { index ->
@@ -190,7 +190,7 @@ suspend fun getBalances(client: OkHttpClient, authToken: String): List<BalanceIt
 }
 
 suspend fun getMoneyOwed(client: OkHttpClient, authToken: String): List<OwedItem> {
-    val moneyOwedResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/moneyOwed", authToken, listOf())
+    val moneyOwedResult = getRequest(client, "http://banking.mcnut.net:8085/api/moneyOwed", authToken, listOf())
     if (moneyOwedResult.first) {
         val jsonArray = JSONArray(moneyOwedResult.second.toString())
         return List(jsonArray.length()) { index ->
@@ -229,7 +229,7 @@ suspend fun getMoneyOwed(client: OkHttpClient, authToken: String): List<OwedItem
 }
 
 suspend fun getUser(client: OkHttpClient, authToken: String): List<UserItem> {
-    val userResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/user", authToken, listOf())
+    val userResult = getRequest(client, "http://banking.mcnut.net:8085/api/user", authToken, listOf())
     if (userResult.first) {
         val jsonArray = JSONArray(userResult.second.toString())
         return List(jsonArray.length()) { index ->
@@ -247,7 +247,7 @@ suspend fun getUser(client: OkHttpClient, authToken: String): List<UserItem> {
 }
 
 suspend fun getTransactions(client: OkHttpClient, authToken: String): Triple<List<Transaction>, List<TrendSummary>, List<TransactionSummary>> {
-    val transactionsResult = getRequest(client, "http://mcgarage.hopto.org:8085/api/transactions", authToken, listOf())
+    val transactionsResult = getRequest(client, "http://banking.mcnut.net:8085/api/transactions", authToken, listOf())
     if (transactionsResult.first && JSONArray(transactionsResult.second.toString()).length() != 0) {
         val jsonArray = JSONArray(transactionsResult.second.toString())
         val transactionList = List(jsonArray.length()) { index ->

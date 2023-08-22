@@ -5,14 +5,12 @@ package com.mcnut.banking.settings
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.widget.Toast
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -30,12 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.R
-import com.mcnut.banking.fragments.MainActivity
 import com.mcnut.banking.helpers.StoreAuthToken
-import com.mcnut.banking.helpers.StoreDarkMode
-import com.mcnut.banking.helpers.getRequest
 import com.mcnut.banking.helpers.postRequest
-import com.mcnut.banking.screens.AccountScreen
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
 import com.mcnut.banking.ui.theme.BudgetingTheme
@@ -54,7 +48,6 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
     val activity = LocalContext.current as Activity
 
     val dataStore = StoreAuthToken(context)
-    val storeDarkMode = StoreDarkMode(context)
 
     val coroutineScope = rememberCoroutineScope()
     val rowPadding = 10.dp
@@ -151,7 +144,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                 coroutineScope.launch {
                     val result = postRequest(
                         bankingInfo.client,
-                        "http://mcgarage.hopto.org:8085/api/logout",
+                        "http://banking.mcnut.net:8085/api/logout",
                         bankingInfo.authToken,
                         listOf()
                     )

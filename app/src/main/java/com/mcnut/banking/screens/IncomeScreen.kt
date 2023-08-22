@@ -289,7 +289,7 @@ suspend fun sendTransaction(transaction: Transaction, coroutineScope: CoroutineS
     return withContext(coroutineScope.coroutineContext) {
         Log.d("Date", transaction.Date)
         val result = postRequest(bankingInfo.client,
-            "http://mcgarage.hopto.org:8085/api/transactions",bankingInfo.authToken ,listOf(
+            "http://banking.mcnut.net:8085/api/transactions",bankingInfo.authToken ,listOf(
                 Pair("category", transaction.Category),
                 Pair("date", transaction.Date),
                 Pair("description", transaction.Description),

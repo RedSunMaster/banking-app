@@ -11,13 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -32,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -79,7 +74,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             val inputAmount = if (amount.isEmpty()) 0.0 else amount.toDouble()
                             val fromResult = postRequest(
                                 bankingInfo.client,
-                                "http://mcgarage.hopto.org:8085/api/transactions",
+                                "http://banking.mcnut.net:8085/api/transactions",
                                 bankingInfo.authToken,
                                 listOf(
                                     Pair("category", selectedFromItem),
@@ -93,7 +88,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                 fromResult.first -> {
                                     val toResult = postRequest(
                                         bankingInfo.client,
-                                        "http://mcgarage.hopto.org:8085/api/transactions",
+                                        "http://banking.mcnut.net:8085/api/transactions",
                                         bankingInfo.authToken,
                                         listOf(
                                             Pair("category", selectedToItem),
