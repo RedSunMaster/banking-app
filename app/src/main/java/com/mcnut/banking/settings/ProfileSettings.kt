@@ -18,7 +18,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mcnut.banking.R
 import com.mcnut.banking.helpers.StoreAuthToken
+import com.mcnut.banking.helpers.patchRequest
 import com.mcnut.banking.helpers.postRequest
 import com.mcnut.banking.types.BankingInfo
 import com.mcnut.banking.types.DatabaseInformation
@@ -37,12 +37,13 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
-    val firstName by remember { mutableStateOf(bankingInfo.user[0].firstName) }
-    val lastName by remember { mutableStateOf(bankingInfo.user[0].lastName) }
-    val email by remember { mutableStateOf(bankingInfo.user[0].email) }
-    val phone by remember { mutableStateOf(bankingInfo.user[0].phone) }
-    val depositAccount by remember { mutableStateOf(bankingInfo.user[0].depositAccount) }
+fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo
+                    ) {
+    val firstName = remember { mutableStateOf(bankingInfo.user[0].firstName) }
+    val lastName = remember { mutableStateOf(bankingInfo.user[0].lastName) }
+    val email = remember { mutableStateOf(bankingInfo.user[0].email) }
+    val phone = remember { mutableStateOf(bankingInfo.user[0].phone) }
+    val depositAccount = remember { mutableStateOf(bankingInfo.user[0].depositAccount) }
     val context = LocalContext.current
 
     val activity = LocalContext.current as Activity
@@ -65,10 +66,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
-                    value = firstName,
-                    onValueChange = { /*TODO*/ },
+                    value = firstName.value,
+                    onValueChange = { firstName.value = it },
                     label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -82,10 +84,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
-                    value = lastName,
-                    onValueChange = { /*TODO*/ },
+                    value = lastName.value,
+                    onValueChange = { lastName.value = it },
                     label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -99,10 +102,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
-                    value = email,
-                    onValueChange = { /*TODO*/ },
+                    value = email.value,
+                    onValueChange = { email.value = it },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -116,10 +120,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
-                    value = phone,
-                    onValueChange = { /*TODO*/ },
+                    value = phone.value,
+                    onValueChange = { phone.value = it },
                     label = { Text("Phone") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -133,10 +138,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                     modifier = Modifier.padding(end = 16.dp)
                 )
                 OutlinedTextField(
-                    value = depositAccount,
-                    onValueChange = { /*TODO*/ },
+                    value = depositAccount.value,
+                    onValueChange = { depositAccount.value = it },
                     label = { Text("Deposit Account (For Auto SMS)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1
                 )
             }
             Spacer(Modifier.height(8.dp))
@@ -170,7 +176,35 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
             }
             Spacer(Modifier.height(8.dp))
             FilledTonalButton(onClick = {
+                coroutineScope.launch {
+                    val result = patchRequest(
+                        bankingInfo.client,
+                        "http://banking.mcnut.net:8085/api/user",
+                        bankingInfo.authToken,
+                        listOf(
+                            Pair("fName", firstName),
+                            Pair("lName", lastName),
+                            Pair("email", email),
+                            Pair("phone", phone),
+                            Pair("depositAccount", depositAccount),
+                        )
+                    )
+                    if (result.first) {
+                        Toast.makeText(
+                            context,
+                            "Updated User",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        activity.recreate()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Update Failed ${result.second}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
 
+                }
             }, Modifier.fillMaxWidth()) {
                 Text("Save")
             }
