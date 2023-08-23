@@ -218,7 +218,7 @@ fun LoginScreen() {
                         },
                         value = emailText,
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
+                            keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(
@@ -255,7 +255,7 @@ fun LoginScreen() {
                         },
                         value = passwordText,
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
+                            keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(
@@ -392,7 +392,7 @@ fun RegisterScreen() {
                     onFill = { lastNameText = it }
                 ) { autofillNode ->
                     OutlinedTextField(
-                        label = { Text("First Name") },
+                        label = { Text("Last Name") },
                         modifier = Modifier.fillMaxWidth().onFocusChanged {
                             autofill?.apply {
                                 if (it.isFocused) {
