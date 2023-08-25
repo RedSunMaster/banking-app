@@ -243,14 +243,7 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
                 )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = {
-                    if (ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.SEND_SMS
-                        ) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.READ_CONTACTS
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
                         if (canSend) {
                             coroutineScope.launch {
                                 canSend = if (canSend) {
@@ -283,7 +276,7 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
                             }
                         }
                     } else {
-                        launcher.launch(Manifest.permission.SEND_SMS)
+                        launcher.launch(Manifest.permission.READ_CONTACTS)
                     }
                 }) {
                     Icon(
@@ -407,10 +400,7 @@ suspend fun sendSMSMessagesAsync(groupedItems: Map<String, List<OwedItem>>, smsM
             val phoneNumber = getPhoneNumber(context, person)
             if (phoneNumber != null) {
                 try {
-                    Log.d("TEST", phoneNumber)
-
                     val parts: ArrayList<String> = smsManager.divideMessage(message)
-                    Log.d("TEST", parts.toString())
                     smsManager.sendMultipartTextMessage(phoneNumber, null, parts, null, null)
                 } catch (e: Exception) {
                     Log.d("TEST", e.message.toString())
