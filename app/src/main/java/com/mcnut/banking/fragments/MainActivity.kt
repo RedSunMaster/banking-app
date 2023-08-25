@@ -66,16 +66,18 @@ class MainActivity : AppCompatActivity() {
             }
             LaunchedEffect(userToken) {
                 if (!userToken.isNullOrEmpty()) {
-                    val result = withContext(Dispatchers.IO) {
-                        getRequest(
-                            client,
-                            "http://banking.mcnut.net:8085/api/login",
-                            userToken,
-                            listOf()
-                        )
+                    runBlocking {
+                        val result = withContext(Dispatchers.IO) {
+                            getRequest(
+                                client,
+                                "http://banking.mcnut.net:8085/api/login",
+                                userToken,
+                                listOf()
+                            )
+                        }
+                        val success = result.first
+                        canLogin.value = success
                     }
-                    val success = result.first
-                    canLogin.value = success
                 }
             }
             val systemDarkMode = isSystemInDarkTheme()
@@ -141,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                else -> {
+                false -> {
                     BudgetingTheme(darkModeToggle) {
                         AccountScreen(darkModeToggle)
                     }

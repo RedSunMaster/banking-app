@@ -4,6 +4,7 @@ package com.mcnut.banking.screens
 
 import Screen
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -192,6 +193,7 @@ fun MainActivityScreen(data: Data, authToken: String, darkModeToggle: Boolean) {
         }
     }
     LaunchedEffect(balancesUpdated) {
+        Log.d("UPDATED", "UPDATED BALANCES")
         if (balancesUpdated) {
             balanceItems = getBalances(client, authToken)
             balancesUpdated = false
@@ -204,6 +206,7 @@ fun MainActivityScreen(data: Data, authToken: String, darkModeToggle: Boolean) {
         }
     }
     LaunchedEffect(transactionsUpdated) {
+        Log.d("UPDATED", "UPDATED TRANSACTIONS")
         if (transactionsUpdated) {
             val result = getTransactions(client, authToken)
             transactions = result.first

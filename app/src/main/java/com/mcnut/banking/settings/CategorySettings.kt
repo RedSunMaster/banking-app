@@ -93,6 +93,7 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         state.onCategoryUpdatedChange(true)
+                                        state.onBalancesUpdatedChange(true)
                                     }
 
                                     else -> {
@@ -166,6 +167,7 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         state.onCategoryUpdatedChange(true)
+                                        state.onBalancesUpdatedChange(true)
 
                                     }
 

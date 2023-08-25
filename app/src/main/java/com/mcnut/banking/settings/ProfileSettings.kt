@@ -182,11 +182,11 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo
                         "http://banking.mcnut.net:8085/api/user",
                         bankingInfo.authToken,
                         listOf(
-                            Pair("fName", firstName),
-                            Pair("lName", lastName),
-                            Pair("email", email),
-                            Pair("phone", phone),
-                            Pair("depositAccount", depositAccount),
+                            Pair("fName", firstName.value),
+                            Pair("lName", lastName.value),
+                            Pair("email", email.value),
+                            Pair("phone", phone.value),
+                            Pair("depositAccount", depositAccount.value),
                         )
                     )
                     if (result.first) {
