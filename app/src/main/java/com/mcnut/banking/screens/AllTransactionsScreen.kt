@@ -179,7 +179,7 @@ fun AllTransactionsScreen(state: DatabaseInformation, bankingInfo: BankingInfo, 
                                 try {
                                     val result = postRequest(
                                         bankingInfo.client,
-                                        "http://banking.mcnut.net:8085/api/transactions",
+                                        "http://banking-app.mcnut.net/api/transactions",
                                         bankingInfo.authToken,
                                         listOf(
                                             Pair("category", category),
@@ -373,7 +373,7 @@ fun TransactionsScreen(
                     coroutineScope.launch {
                         val result = deleteRequest(
                             bankingInfo.client,
-                            "http://banking.mcnut.net:8085/api/transactions",
+                            "http://banking-app.mcnut.net/api/transactions",
                             bankingInfo.authToken,
                             listOf(
                                 Pair("transactionId", id),
@@ -407,7 +407,7 @@ fun TransactionsScreen(
                 coroutineScope.launch {
                     val result = patchRequest(
                         bankingInfo.client,
-                        "http://banking.mcnut.net:8085/api/transactions",
+                        "http://banking-app.mcnut.net/api/transactions",
                         bankingInfo.authToken,
                         listOf(
                             Pair("transactionId", trans_id),

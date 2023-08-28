@@ -150,7 +150,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo
                 coroutineScope.launch {
                     val result = postRequest(
                         bankingInfo.client,
-                        "http://banking.mcnut.net:8085/api/logout",
+                        "http://banking-app.mcnut.net/api/logout",
                         bankingInfo.authToken,
                         listOf()
                     )
@@ -179,7 +179,7 @@ fun ProfileSettings(state: DatabaseInformation, bankingInfo: BankingInfo
                 coroutineScope.launch {
                     val result = patchRequest(
                         bankingInfo.client,
-                        "http://banking.mcnut.net:8085/api/user",
+                        "http://banking-app.mcnut.net/api/user",
                         bankingInfo.authToken,
                         listOf(
                             Pair("fName", firstName.value),

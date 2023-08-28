@@ -74,7 +74,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             val inputAmount = if (amount.isEmpty()) 0.0 else amount.toDouble()
                             val fromResult = postRequest(
                                 bankingInfo.client,
-                                "http://banking.mcnut.net:8085/api/transactions",
+                                "http://banking-app.mcnut.net/api/transactions",
                                 bankingInfo.authToken,
                                 listOf(
                                     Pair("category", selectedFromItem),
@@ -88,7 +88,7 @@ fun TransferScreen(state: DatabaseInformation, bankingInfo: BankingInfo) {
                                 fromResult.first -> {
                                     val toResult = postRequest(
                                         bankingInfo.client,
-                                        "http://banking.mcnut.net:8085/api/transactions",
+                                        "http://banking-app.mcnut.net/api/transactions",
                                         bankingInfo.authToken,
                                         listOf(
                                             Pair("category", selectedToItem),

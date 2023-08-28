@@ -156,7 +156,7 @@ fun LoginScreen() {
                 onClick = {
                     coroutineScope.launch {
                         val result =
-                            accountPostRequest("http://banking.mcnut.net:8085/api/login", null, listOf(
+                            accountPostRequest("http://banking-app.mcnut.net/api/login", null, listOf(
                                 Pair("email", emailText.lowercase()),
                                 Pair("password", passwordText)
                             ))
@@ -308,7 +308,7 @@ fun RegisterScreen() {
                         if (!isError || !isConfirmError) {
                             val result =
                                 accountPostRequest(
-                                    "http://banking.mcnut.net:8085/api/register", null, listOf(
+                                    "http://banking-app.mcnut.net/api/register", null, listOf(
                                         Pair("fName", firstNameText),
                                         Pair("lName", lastNameText),
                                         Pair("email", emailText.lowercase()),

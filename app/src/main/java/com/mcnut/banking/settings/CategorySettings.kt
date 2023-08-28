@@ -78,7 +78,7 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             coroutineScope.launch {
                                 val result = postRequest(
                                     bankingInfo.client,
-                                    "http://banking.mcnut.net:8085/api/categories",
+                                    "http://banking-app.mcnut.net/api/categories",
                                     bankingInfo.authToken,
                                     listOf(
                                         Pair("categoryName", newCategoryText),
@@ -151,7 +151,7 @@ fun CategorySettings(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             coroutineScope.launch {
                                 val result = patchRequest(
                                     bankingInfo.client,
-                                    "http://banking.mcnut.net:8085/api/categories",
+                                    "http://banking-app.mcnut.net/api/categories",
                                     bankingInfo.authToken,
                                     listOf(
                                         Pair("categoryName", newCategoryText),

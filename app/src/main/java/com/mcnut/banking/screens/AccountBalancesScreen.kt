@@ -99,7 +99,7 @@ fun AccountBalancesScreen(state: DatabaseInformation, bankingInfo: BankingInfo) 
                             coroutineScope.launch {
                                 val result = postRequest(
                                     bankingInfo.client,
-                                    "http://banking.mcnut.net:8085/api/transactions",
+                                    "http://banking-app.mcnut.net/api/transactions",
                                     bankingInfo.authToken,
                                     listOf(
                                         Pair("category", category),

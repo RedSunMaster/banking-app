@@ -119,7 +119,7 @@ fun MoneyOwed(state: DatabaseInformation, bankingInfo: BankingInfo) {
                             coroutineScope.launch {
                                 val result = postRequest(
                                     bankingInfo.client,
-                                    "http://banking.mcnut.net:8085/api/moneyOwed",
+                                    "http://banking-app.mcnut.net/api/moneyOwed",
                                     bankingInfo.authToken,
                                     listOf(
                                         Pair("person", personText),
@@ -249,7 +249,7 @@ fun NotPayedTab(data: BankingInfo, state: DatabaseInformation, heightInDp: Dp) {
                                 canSend = if (canSend) {
                                     val patchResult = patchRequest(
                                         data.client,
-                                        "http://banking.mcnut.net:8085/api/sms",
+                                        "http://banking-app.mcnut.net/api/sms",
                                         data.authToken,
                                         listOf()
                                     )
@@ -446,7 +446,7 @@ fun DisplayItemsList(items: List<OwedItem>, showItems: Boolean, bankingInfo: Ban
                                         onClick = {
                                             coroutineScope.launch {
                                                 val result = patchRequest(bankingInfo.client,
-                                                    "http://banking.mcnut.net:8085/api/updateOwedItem",
+                                                    "http://banking-app.mcnut.net/api/updateOwedItem",
                                                     bankingInfo.authToken,
                                                     listOf(Pair("owed_id", item.ID.toString()))
                                                 )
@@ -505,7 +505,7 @@ fun DisplayItemsList(items: List<OwedItem>, showItems: Boolean, bankingInfo: Ban
             onSubmit = { amount, chosenDate, descriptionText, personText, selectedItem, itemId ->
                 openDialog = false
                 coroutineScope.launch {
-                    val result = patchRequest(bankingInfo.client,"http://banking.mcnut.net:8085/api/editOwedItem",
+                    val result = patchRequest(bankingInfo.client,"http://banking-app.mcnut.net/api/editOwedItem",
                         bankingInfo.authToken,listOf(
                             Pair("owed_id", itemId),
                             Pair("person", personText),
