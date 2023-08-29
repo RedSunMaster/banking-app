@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
-import co.yml.charts.common.extensions.isNotNull
 import com.mcnut.banking.helpers.StoreAuthToken
 import com.mcnut.banking.helpers.StoreDarkMode
 import com.mcnut.banking.helpers.getRequest
@@ -32,7 +31,6 @@ import com.mcnut.banking.types.WeekSummary
 import com.mcnut.banking.ui.theme.BudgetingTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -48,10 +46,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-
-
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             val context = LocalContext.current
@@ -59,41 +53,40 @@ class MainActivity : AppCompatActivity() {
             val storeDarkMode = StoreDarkMode(context)
             val canLogin = remember { mutableStateOf(false) }
             val showSplash = remember { mutableStateOf(true) }
-            val userToken = runBlocking { dataStore.getAuthToken.firstOrNull() }
-            val darkModeFlow = runBlocking {storeDarkMode.getDarkMode.firstOrNull()}
-            var darkModeToggle by remember {
-                mutableStateOf(false)
-            }
-            LaunchedEffect(userToken) {
-                if (!userToken.isNullOrEmpty()) {
-                    runBlocking {
-                        val result = withContext(Dispatchers.IO) {
-                            getRequest(
-                                client,
-                                "http://banking-app.mcnut.net/api/login",
-                                userToken,
-                                listOf()
-                            )
-                        }
-                        val success = result.first
-                        canLogin.value = success
-                    }
-                }
-            }
-            val systemDarkMode = isSystemInDarkTheme()
-            LaunchedEffect (darkModeFlow) {
+            var darkModeToggle by remember { mutableStateOf(false) }
+            val defaultDarkMode = isSystemInDarkTheme()
+            val userToken = remember { mutableStateOf<String?>(null) }
+            val darkModeFlow = remember { mutableStateOf<Int?>(null) }
+            val loginAttempted = remember { mutableStateOf(false) }
+            // Get userToken and darkMode from stored objects
+            LaunchedEffect(Unit) {
+                userToken.value = dataStore.getAuthToken.firstOrNull()
+                darkModeFlow.value = storeDarkMode.getDarkMode.firstOrNull()
 
-                if (darkModeFlow.isNotNull()) {
-                    when (darkModeFlow) {
-                        0 -> darkModeToggle = false
-                        1 -> darkModeToggle = true
-                        2 -> darkModeToggle = systemDarkMode
+                // Login user if userToken is not null or empty
+                if (!userToken.value.isNullOrEmpty()) {
+                    val result = withContext(Dispatchers.IO) {
+                        getRequest(
+                            client,
+                            "http://banking-app.mcnut.net/api/login",
+                            userToken.value,
+                            listOf()
+                        )
                     }
+                    canLogin.value = result.first
+                    Log.d("RESULT", result.first.toString())
+                    loginAttempted.value = true
                 } else {
-                    darkModeToggle = systemDarkMode
+                    loginAttempted.value = true
+                }
+
+                // Set dark mode based on stored value or system setting
+                when (darkModeFlow.value) {
+                    0 -> darkModeToggle = false
+                    1 -> darkModeToggle = true
+                    2, null -> darkModeToggle = defaultDarkMode
                 }
             }
-
 
             when (canLogin.value) {
                 // Set dark mode
@@ -113,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
                     LaunchedEffect(Unit) {
                         if (!valuesGotten.value) {
-                            data.value = updateData(client, userToken!!)
+                            data.value = updateData(client, userToken.value!!)
                             categories = data.value.categories
                             balanceItems = data.value.balanceItems
                             owedItems = data.value.owedItems
@@ -138,20 +131,27 @@ class MainActivity : AppCompatActivity() {
                             }
                         } else {
                             BudgetingTheme(darkModeToggle) {
-                                MainActivityScreen(data = data.value, authToken = userToken!!, darkModeToggle)
+                                MainActivityScreen(data = data.value, authToken = userToken.value!!, darkModeToggle)
                             }
                         }
                     }
                 }
                 false -> {
-                    BudgetingTheme(darkModeToggle) {
-                        AccountScreen(darkModeToggle)
+                    if (loginAttempted.value) {
+                        BudgetingTheme(darkModeToggle) {
+                            AccountScreen(darkModeToggle)
+                        }
+                    } else {
+                        BudgetingTheme(darkModeToggle) {
+                            SplashScreen(darkModeToggle)
+                        }
                     }
                 }
             }
         }
     }
 }
+
 suspend fun getCategories(client: OkHttpClient, authToken: String): List<CategoryItem> {
     val categoriesResult = getRequest(client, "http://banking-app.mcnut.net/api/categories", authToken, listOf())
     if (categoriesResult.first) {

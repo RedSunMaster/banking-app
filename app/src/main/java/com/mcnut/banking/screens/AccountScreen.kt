@@ -298,6 +298,7 @@ fun RegisterScreen() {
     val rowPadding = 10.dp
     val autofill = LocalAutofill.current
     val context = LocalContext.current
+    val dataStore = StoreAuthToken(context)
     val keyboardController = LocalSoftwareKeyboardController.current
     Scaffold(
         floatingActionButton = {
@@ -320,9 +321,37 @@ fun RegisterScreen() {
                                 result.first -> {
                                     Toast.makeText(
                                         context,
-                                        "Successfully Updated",
+                                        "Successfully Registered",
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    val loginResult =
+                                        accountPostRequest("http://banking-app.mcnut.net/api/login", null, listOf(
+                                            Pair("email", emailText.lowercase()),
+                                            Pair("password", passwordText)
+                                        ))
+                                    when {
+                                        loginResult.first -> {
+                                            dataStore.saveAuthToken(result.second as String)
+                                            Toast.makeText(
+                                                context,
+                                                "Successfully Logged In",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            context.startActivity(
+                                                Intent(
+                                                    context,
+                                                    MainActivity::class.java
+                                                )
+                                            )
+                                        }
+                                        else -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Login Failed: ${result.second}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
                                 }
 
                                 else -> {
